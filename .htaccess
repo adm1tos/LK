@@ -1,0 +1,29 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# Запрет доступа к env-файлам
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Запрет доступа к скрытым файлам: .git, .htaccess и т.п.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Запрет доступа к composer-файлам
+<FilesMatch "^(composer\.json|composer\.lock)$">
+    Require all denied
+</FilesMatch>
+
+# Запрет доступа к PHP-зависимостям Composer
+RedirectMatch 403 ^/vendor(/|$)
+
+# Запрет доступа к внутренним папкам проекта
+RedirectMatch 403 ^/storage(/|$)
+RedirectMatch 403 ^/includes(/|$)
+
+# Запрет доступа к временным/служебным файлам
+<FilesMatch "\.(bak|backup|old|log|sql|sqlite|ini|conf|key|pem|pub)$">
+    Require all denied
+</FilesMatch>

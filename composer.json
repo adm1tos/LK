@@ -1,0 +1,7 @@
+{
+  "require": {
+    "evilfreelancer/routeros-api-php": "^1.6",
+    "zzantares/proxmoxve": "~4.0",
+    "phpseclib/phpseclib": "^3.0"
+  }
+}
