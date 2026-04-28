@@ -21,4 +21,4 @@ try {
     flash('error', $e->getMessage());
 }
 
-redirect('vpn/index.php');
+redirect('lk_vpn/index.php');

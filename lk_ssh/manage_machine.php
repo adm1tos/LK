@@ -5,7 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/includes/bootstrap.php';
 require_auth();
 
-require_once INCLUDES_PATH . '/services/VmSshService.php';
+require_once INCLUDES_PATH . '/services/VmSshService_ALT.php';
 
 $node = trim((string) ($_GET['node'] ?? ''));
 $vmid = (int) ($_GET['vmid'] ?? 0);
@@ -13,14 +13,14 @@ $type = trim((string) ($_GET['type'] ?? 'qemu'));
 
 if ($node === '' || $vmid <= 0) {
     flash('error', 'Не выбрана машина.');
-    redirect('ssh/machines.php');
+    redirect('lk_ssh/machines.php');
 }
 
 $vmSsh = new VmSshService($config);
 
 if (!$vmSsh->isManagedVm($node, $vmid, $type)) {
     flash('error', 'Для этой VM SSH-управление пока не настроено.');
-    redirect('ssh/machines.php');
+    redirect('lk_ssh/machines.php');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -61,10 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new RuntimeException('Неизвестное действие.');
         }
 
-        redirect('ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . $vmid . '&type=' . urlencode($type));
+        redirect('lk_ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . $vmid . '&type=' . urlencode($type));
     } catch (Throwable $e) {
         flash('error', $e->getMessage());
-        redirect('ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . $vmid . '&type=' . urlencode($type));
+        redirect('lk_ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . $vmid . '&type=' . urlencode($type));
     }
 }
 
@@ -104,7 +104,7 @@ require INCLUDES_PATH . '/header.php';
 
 <section class="card">
     <div class="btn-row">
-        <a class="btn btn-secondary" href="<?= e(url('ssh/machines.php')) ?>">Назад к машинам</a>
+        <a class="btn btn-secondary" href="<?= e(url('lk_ssh/machines.php')) ?>">Назад к машинам</a>
     </div>
 </section>
 

@@ -27,7 +27,7 @@ require INCLUDES_PATH . '/header.php';
     <?php if (!$request): ?>
         <!-- Показывает форму подачи заявки, если заявка еще не создавалась. -->
         <p>У тебя еще нет заявки на VPN.</p>
-        <form method="post" action="<?= e(url('vpn/request.php')) ?>">
+        <form method="post" action="<?= e(url('lk_vpn/request.php')) ?>">
             <?= csrf_field() ?>
             <button class="btn" type="submit">Подать заявку</button>
         </form>
@@ -54,8 +54,8 @@ require INCLUDES_PATH . '/header.php';
             <p><strong>Public key:</strong> <?= e((string) $configRow['public_key']) ?></p>
             <p><strong>Конфиг уже выдавался:</strong> <?= (int) $configRow['has_config'] === 1 ? 'Да' : 'Нет' ?></p>
             <div class="btn-row">
-                <a class="btn btn-secondary" href="<?= e(url('vpn/download.php')) ?>">Скачать текущий .conf</a>
-                <form method="post" action="<?= e(url('vpn/generate.php')) ?>">
+                <a class="btn btn-secondary" href="<?= e(url('lk_vpn/download.php')) ?>">Скачать текущий .conf</a>
+                <form method="post" action="<?= e(url('lk_vpn/generate.php')) ?>">
                     <?= csrf_field() ?>
                     <button class="btn" type="submit">Перегенерировать конфиг</button>
                 </form>
@@ -63,7 +63,7 @@ require INCLUDES_PATH . '/header.php';
         <?php else: ?>
             <!--Если конфига еще нет, можно создать его впервые-->
             <p>Конфиг еще не создавался.</p>
-            <form method="post" action="<?= e(url('vpn/generate.php')) ?>">
+            <form method="post" action="<?= e(url('lk_vpn/generate.php')) ?>">
                 <?= csrf_field() ?>
                 <button class="btn" type="submit">Сгенерировать конфиг</button>
             </form>

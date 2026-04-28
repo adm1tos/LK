@@ -1,5 +1,5 @@
 <?php
-// сервис для работы с DNS-записями
+// сервис для работы с DNS-записями 
 declare(strict_types=1);
 
 final class DnsService

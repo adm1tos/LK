@@ -21,4 +21,4 @@ if ($stmt->fetch()) {
     flash('success', 'Заявка на VPN отправлена.');
 }
 
-redirect('vpn/index.php');
+redirect('lk_vpn/index.php');

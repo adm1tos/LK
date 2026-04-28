@@ -10,7 +10,7 @@ $filePath = STORAGE_PATH . '/configs/wg-user-' . (int) $user['id'] . '.conf';
 
 if (!is_file($filePath)) {
     flash('error', 'Файл конфига не найден.');
-    redirect('vpn/index.php');
+    redirect('lk_vpn/index.php');
 }
 
 header('Content-Type: text/plain; charset=utf-8');

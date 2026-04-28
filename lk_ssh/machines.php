@@ -25,7 +25,7 @@ require INCLUDES_PATH . '/header.php';
 ?>
 <section class="card">
     <div class="btn-row">
-        <a class="btn btn-secondary" href="<?= e(url('ssh/index.php')) ?>">Назад к SSH-ключам</a>
+        <a class="btn btn-secondary" href="<?= e(url('lk_ssh/index.php')) ?>">Назад к SSH-ключам</a>
     </div>
 </section>
 
@@ -73,7 +73,7 @@ require INCLUDES_PATH . '/header.php';
                         <td>
                             <?php if ($canManage): ?>
                                 <a class="btn btn-secondary"
-                                   href="<?= e(url('ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . urlencode((string) $vmid) . '&type=' . urlencode($type))) ?>">
+                                   href="<?= e(url('lk_ssh/manage_machine.php?node=' . urlencode($node) . '&vmid=' . urlencode((string) $vmid) . '&type=' . urlencode($type))) ?>">
                                     Настроить SSH
                                 </a>
                             <?php else: ?>

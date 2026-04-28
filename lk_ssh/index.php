@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('error', $e->getMessage());
     }
 
-    redirect('ssh/index.php');
+    redirect('lk_ssh/index.php');
 }
 
 // Загружает список SSH-ключей текущего пользователя для таблицы.
@@ -126,7 +126,7 @@ require INCLUDES_PATH . '/header.php';
 <section class="card">
     <h2>Мои SSH-ключи</h2>
 <div class="btn-row">
-    <a class="btn btn-secondary" href="<?= e(url('ssh/machines.php')) ?>">Машины для привязки ключей...</a>
+    <a class="btn btn-secondary" href="<?= e(url('lk_ssh/machines.php')) ?>">Машины для привязки ключей...</a>
 </div>
     <?php if (!$keys): ?>
         <p>У тебя пока нет добавленных SSH-ключей.</p>
