@@ -114,7 +114,7 @@ return [
         'user_ip_prefix' => env_value('VPN_USER_IP_PREFIX', '192.168.0.'),
         'max_clients' => (int) env_value('VPN_MAX_CLIENTS', '253'),
         'allowed_ips' => env_value('VPN_ALLOWED_IPS', '192.168.100.0/24, 192.168.102.0/24, 192.168.109.1/32'),
-        'extra_interface_addresses' => env_value('VPN_EXTRA_INTERFACE_ADDRESSES', '192.168.109.1/32, 192.168.100.0/24'),
+        'extra_interface_addresses' => env_value('VPN_EXTRA_INTERFACE_ADDRESSES', ''),
         'persistent_keepalive' => (int) env_value('VPN_PERSISTENT_KEEPALIVE', '25'),
     ],
 
