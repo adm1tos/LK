@@ -18,7 +18,7 @@ require INCLUDES_PATH . '/header.php';
 <div class="grid">
     <section class="card">
         <h2>Профиль</h2>
-        <p><strong>Логин:</strong> <?= e($user['username']) ?></p>
+        <p><strong>Имя:</strong> <?= e(user_display_name($user)) ?></p>
         <p><strong>Email:</strong> <?= e($user['email']) ?></p>
         <p><strong>Роль:</strong> <?= e($user['role']) ?></p>
     </section>

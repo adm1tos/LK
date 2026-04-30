@@ -14,7 +14,18 @@ if (!is_file($filePath)) {
 }
 
 header('Content-Type: text/plain; charset=utf-8');
-header('Content-Disposition: attachment; filename="wg-' . preg_replace('/[^A-Za-z0-9._-]/', '_', (string) $user['username']) . '.conf"');
+
+//
+$fileName = preg_replace('/[^A-Za-z0-9А-Яа-яЁё._-]+/u', '_', user_display_name($user));
+$fileName = trim((string) $fileName, '_');
+
+if ($fileName === '') {
+    $fileName = 'user-' . (int) $user['id'];
+}
+
+header('Content-Disposition: attachment; filename="wg-' . $fileName . '.conf"');
+//
+
 header('Content-Length: ' . (string) filesize($filePath));
 readfile($filePath);
 exit;

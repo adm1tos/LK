@@ -23,7 +23,7 @@
             <div class="topbar-actions">
                 <?php if ($user): ?>
                     <div class="user-box">
-                        <strong><?= e($user['username']) ?></strong>
+                        <strong><?= e(user_display_name($user)) ?></strong>
                         <span><?= e($user['role']) ?></span>
                     </div>
                     <a class="btn btn-secondary" href="<?= e(url('logout.php')) ?>">Выйти</a>

@@ -40,12 +40,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'VPN заявки';
 $pageSubtitle = 'Администрирование заявок пользователей.';
 // получаем список заявок на VPN
-$stmt = db()->query('SELECT vr.id, vr.status, vr.created_at, vr.reviewed_at, u.username, u.email, reviewer.username AS reviewer_name
+$stmt = db()->query('
+    SELECT
+        vr.id,
+        vr.status,
+        vr.created_at,
+        vr.reviewed_at,
+        u.first_name,
+        u.last_name,
+        u.username,
+        u.email,
+        reviewer.first_name AS reviewer_first_name,
+        reviewer.last_name AS reviewer_last_name,
+        reviewer.username AS reviewer_username
     FROM vpn_requests vr
     INNER JOIN users u ON u.id = vr.user_id
     LEFT JOIN users reviewer ON reviewer.id = vr.reviewed_by
-    ORDER BY FIELD(vr.status, "pending", "approved", "rejected"), vr.created_at DESC');
-$requests = $stmt->fetchAll();
+    ORDER BY FIELD(vr.status, "pending", "approved", "rejected"), vr.created_at DESC
+');
 
 require INCLUDES_PATH . '/header.php';
 ?>
@@ -67,11 +79,16 @@ require INCLUDES_PATH . '/header.php';
             <?php foreach ($requests as $request): ?>
                 <tr>
                     <td><?= e((string) $request['id']) ?></td>
-                    <td><?= e($request['username']) ?></td>
+                    <td><?= e(user_display_name($request)) ?></td>
                     <td><?= e($request['email']) ?></td>
                     <td><span class="badge badge-<?= e($request['status']) ?>"><?= e($request['status']) ?></span></td>
                     <td><?= e((string) $request['created_at']) ?></td>
-                    <td><?= e($request['reviewer_name'] ?? '—') ?></td>
+                    <td>
+                        <?php
+                        $reviewerName = trim((string) ($request['reviewer_first_name'] ?? '') . ' ' . (string) ($request['reviewer_last_name'] ?? ''));
+                        echo e($reviewerName !== '' ? $reviewerName : ($request['reviewer_username'] ?? '—'));
+                        ?>
+                    </td>
                     <td>
                         <?php if ($request['status'] === 'pending'): ?>
                             <form class="inline-form" method="post">

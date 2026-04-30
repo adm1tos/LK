@@ -145,8 +145,9 @@ final class VpnService
     // КОММЕНТАРИЙ С ИНФОЙ РЕГИСТРАЦИИ ИЗ БД 
     private function buildComment(array $user): string
     {
-        $name = $user['username'];
+        $name = user_display_name($user);
         $email = (string) ($user['email'] ?? '');
-        return sprintf('name=%s, email=%s, username=%s', $name, $email, $user['username']);
+
+        return sprintf('name=%s, email=%s', $name, $email);
     }
 }

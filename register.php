@@ -1,5 +1,5 @@
 <?php
-// страница регистрации в личный кабинет
+
 declare(strict_types=1);
 
 require __DIR__ . '/includes/bootstrap.php';
@@ -7,22 +7,25 @@ require __DIR__ . '/includes/bootstrap.php';
 if (current_user()) {
     redirect('mainmenu/dashboard.php');
 }
-// массив для хранения ошибок
+
 $errors = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
-    $username = trim($_POST['username'] ?? '');
-    $email = trim($_POST['email'] ?? '');
+    $firstName = trim((string) ($_POST['first_name'] ?? ''));
+    $lastName = trim((string) ($_POST['last_name'] ?? ''));
+    $email = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
     $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 
-    if ($username === '' || mb_strlen($username) < 3) {
-        $errors[] = 'Логин должен быть не короче 3 символов.';
+    if ($firstName === '' || mb_strlen($firstName) < 2) {
+        $errors[] = 'Имя должно быть не короче 2 символов.';
     }
 
-
-
+    if ($lastName === '' || mb_strlen($lastName) < 2) {
+        $errors[] = 'Фамилия должна быть не короче 2 символов.';
+    }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Укажи корректный email.';
@@ -35,17 +38,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $passwordConfirm) {
         $errors[] = 'Пароли не совпадают.';
     }
+
     if (!$errors) {
-        $stmt = db()->prepare('SELECT id FROM users WHERE username = :username OR email = :email LIMIT 1');
-        $stmt->execute(['username' => $username, 'email' => $email]);
+        $stmt = db()->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
+        $stmt->execute(['email' => $email]);
+
         if ($stmt->fetch()) {
-            $errors[] = 'Пользователь с таким логином или email уже существует.';
+            $errors[] = 'Пользователь с таким email уже существует.';
         }
     }
-// если ошибок нет, создаем нового пользователя
+
     if (!$errors) {
-        $stmt = db()->prepare('INSERT INTO users (username, email, password_hash, role) VALUES (:username, :email, :password_hash, :role)');
+        /*username оставлю на всякий случай*/
+
+        $username = $email;
+
+        $stmt = db()->prepare('
+            INSERT INTO users (
+                first_name,
+                last_name,
+                username,
+                email,
+                password_hash,
+                role
+            )
+            VALUES (
+                :first_name,
+                :last_name,
+                :username,
+                :email,
+                :password_hash,
+                :role
+            )
+        ');
+
         $stmt->execute([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'username' => $username,
             'email' => $email,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
@@ -78,11 +107,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="post">
             <?= csrf_field() ?>
-            <label for="username">Логин</label>
-            <input id="username" name="username" value="<?= e($_POST['username'] ?? '') ?>" required>
+
+            <label for="first_name">Имя</label>
+            <input
+                id="first_name"
+                name="first_name"
+                value="<?= e($_POST['first_name'] ?? '') ?>"
+                required
+            >
+
+            <label for="last_name">Фамилия</label>
+            <input
+                id="last_name"
+                name="last_name"
+                value="<?= e($_POST['last_name'] ?? '') ?>"
+                required
+            >
 
             <label for="email">Email</label>
-            <input id="email" type="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" required>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                value="<?= e($_POST['email'] ?? '') ?>"
+                required
+            >
 
             <label for="password">Пароль</label>
             <input id="password" type="password" name="password" required>

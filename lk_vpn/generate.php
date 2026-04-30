@@ -12,7 +12,9 @@ try {
     $service = new VpnService($config);
     $result = $service->generateForUser([
         'id' => (int) $user['id'],
-        'username' => (string) $user['username'],
+        'first_name' => (string) ($user['first_name'] ?? ''),
+        'last_name' => (string) ($user['last_name'] ?? ''),
+        'username' => (string) ($user['username'] ?? ''),
         'email' => $user['email'] ?? null,
     ]);
 

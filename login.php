@@ -18,22 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string) ($_POST['password'] ?? '');
 
     if ($login === '' || $password === '') {
-        $errors[] = 'Заполни логин и пароль.';
+        $errors[] = 'Заполни email и пароль.';
     } else {
         $stmt = db()->prepare('
             SELECT id, password_hash, is_active
             FROM users
-            WHERE username = :username OR email = :email
+            WHERE email = :email
             LIMIT 1
         ');
         $stmt->execute([
-            'username' => $login,
             'email' => $login,
         ]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
-            $errors[] = 'Неверный логин или пароль.';
+            $errors[] = 'Неверный email или пароль.';
         } elseif ((int) $user['is_active'] !== 1) {
             $errors[] = 'Аккаунт отключен.';
         } else {
@@ -67,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="post">
             <?= csrf_field() ?>
-            <label for="login">Логин или email</label>
+            <label for="login">Email</label>
             <input id="login" name="login" value="<?= e($_POST['login'] ?? '') ?>" required>
 
             <label for="password">Пароль</label>

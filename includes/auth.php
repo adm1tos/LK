@@ -17,7 +17,12 @@ function current_user(): ?array
         return $user;
     }
 
-    $stmt = db()->prepare('SELECT id, username, email, role, is_active, created_at FROM users WHERE id = :id LIMIT 1');
+    $stmt = db()->prepare('
+        SELECT id, first_name, last_name, username, email, role, is_active, created_at
+        FROM users
+        WHERE id = :id
+        LIMIT 1
+    ');
     $stmt->execute(['id' => $id]);
     $user = $stmt->fetch() ?: null;
 

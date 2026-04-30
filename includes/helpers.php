@@ -39,3 +39,17 @@ function flash(string $key, ?string $value = null): ?string
     unset($_SESSION['_flash'][$key]);
     return $message;
 }
+//показ имени
+function user_display_name(array $user): string
+{
+    $firstName = trim((string) ($user['first_name'] ?? ''));
+    $lastName = trim((string) ($user['last_name'] ?? ''));
+
+    $fullName = trim($firstName . ' ' . $lastName);
+
+    if ($fullName !== '') {
+        return $fullName;
+    }
+
+    return (string) ($user['email'] ?? $user['username'] ?? 'Пользователь');
+}
