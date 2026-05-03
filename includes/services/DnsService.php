@@ -1,97 +1,56 @@
 <?php
-// сервис для работы с DNS-записями 
+// сервис для работы с DNS-записями MikroTik
 declare(strict_types=1);
 
 final class DnsService
 {
-    // Инициализирует сервис DNS с доступом к БД и API MikroTik
+    // Инициализирует сервис DNS с доступом к API MikroTik.
+    // База данных больше не используется: источником DNS-записей считается сам MikroTik.
     public function __construct(
-        private readonly PDO $db,
         private readonly MikrotikService $mikrotik
     ) {
     }
 
-    // Возвращает список DNS-записей с именем пользователя, который их создал
+    // Возвращает список статических DNS-записей напрямую с MikroTik.
     public function listRecords(): array
     {
-        $stmt = $this->db->query('
-            SELECT dr.*, u.username AS created_by_username
-            FROM dns_records dr
-            LEFT JOIN users u ON u.id = dr.created_by
-            ORDER BY dr.created_at DESC
-        ');
+        $records = $this->mikrotik->getDnsStaticRecords();
 
-        return $stmt->fetchAll();
+        usort($records, static function (array $a, array $b): int {
+            return strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+        });
+
+        return $records;
     }
 
-    // Находит DNS-запись в базе по её идентификатору
-    public function findRecordById(int $id): ?array
+    // Ищет DNS-запись на MikroTik по доменному имени.
+    public function findRecordByName(string $domainName): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM dns_records WHERE id = :id LIMIT 1');
-        $stmt->execute(['id' => $id]);
+        $domainName = strtolower(trim($domainName));
 
-        return $stmt->fetch() ?: null;
+        $this->validateDomainName($domainName);
+
+        return $this->mikrotik->findDnsStaticRecordByName($domainName);
     }
 
-    // Создает или обновляет DNS-запись в БД и синхронизирует её в MikroTik
+    // Создает или обновляет static DNS-запись на MikroTik.
     public function saveRecord(
-        string $node,
-        int $vmid,
-        string $type,
-        string $machineName,
         string $domainName,
         string $ipAddress,
-        int $userId
+        string $comment = ''
     ): void {
         $domainName = strtolower(trim($domainName));
         $ipAddress = trim($ipAddress);
+        $comment = trim($comment);
 
         $this->validateDomainName($domainName);
 
         if (!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new RuntimeException('QEMU Guest Agent вернул некорректный IPv4-адрес.');
+            throw new RuntimeException('Некорректный IPv4-адрес.');
         }
 
-        $machineStmt = $this->db->prepare('
-            SELECT *
-            FROM dns_records
-            WHERE node = :node AND vmid = :vmid AND type = :type
-            LIMIT 1
-        ');
-        $machineStmt->execute([
-            'node' => $node,
-            'vmid' => $vmid,
-            'type' => $type,
-        ]);
-
-        $existingMachine = $machineStmt->fetch() ?: null;
-
-        $domainStmt = $this->db->prepare('
-            SELECT *
-            FROM dns_records
-            WHERE domain_name = :domain_name
-            LIMIT 1
-        ');
-        $domainStmt->execute(['domain_name' => $domainName]);
-
-        $existingDomain = $domainStmt->fetch() ?: null;
-
-        if (
-            $existingDomain
-            && (!$existingMachine || (int) $existingDomain['id'] !== (int) $existingMachine['id'])
-        ) {
-            throw new RuntimeException('Такое доменное имя уже назначено другой машине.');
-        }
-
-        if (
-            $existingMachine
-            && strtolower((string) $existingMachine['domain_name']) !== $domainName
-        ) {
-            $this->deleteRouterRecordForDbRecord($existingMachine);
-        }
-
-        $comment = 'LK DNS VMID ' . $vmid . ' ' . $machineName;
-
+        // Если запись с таким доменом уже есть, обновляем её.
+        // Если записи нет, создаём новую static DNS-запись.
         $routerRecord = $this->mikrotik->findDnsStaticRecordByName($domainName);
 
         if ($routerRecord && !empty($routerRecord['.id'])) {
@@ -102,103 +61,66 @@ final class DnsService
                 $comment
             );
 
-            $mikrotikId = (string) $routerRecord['.id'];
-        } else {
-            $routerRecord = $this->mikrotik->addDnsStaticRecord(
-                $domainName,
-                $ipAddress,
-                $comment
-            );
-
-            $mikrotikId = (string) ($routerRecord['.id'] ?? '');
-        }
-
-        if ($existingMachine) {
-            $stmt = $this->db->prepare('
-                UPDATE dns_records
-                SET machine_name = :machine_name,
-                    domain_name = :domain_name,
-                    ip_address = :ip_address,
-                    mikrotik_id = :mikrotik_id,
-                    updated_at = NOW()
-                WHERE id = :id
-            ');
-
-            $stmt->execute([
-                'machine_name' => $machineName,
-                'domain_name' => $domainName,
-                'ip_address' => $ipAddress,
-                'mikrotik_id' => $mikrotikId !== '' ? $mikrotikId : null,
-                'id' => $existingMachine['id'],
-            ]);
-
             return;
         }
 
-        $stmt = $this->db->prepare('
-            INSERT INTO dns_records (
-                node, vmid, type, machine_name,
-                domain_name, ip_address, mikrotik_id,
-                created_by
-            )
-            VALUES (
-                :node, :vmid, :type, :machine_name,
-                :domain_name, :ip_address, :mikrotik_id,
-                :created_by
-            )
-        ');
-
-        $stmt->execute([
-            'node' => $node,
-            'vmid' => $vmid,
-            'type' => $type,
-            'machine_name' => $machineName,
-            'domain_name' => $domainName,
-            'ip_address' => $ipAddress,
-            'mikrotik_id' => $mikrotikId !== '' ? $mikrotikId : null,
-            'created_by' => $userId,
-        ]);
+        $this->mikrotik->addDnsStaticRecord($domainName, $ipAddress, $comment);
     }
 
-    // Удаляет DNS-запись из БД и связанный static DNS на MikroTik.
-    public function deleteRecord(int $id): void
+    // Удаляет DNS-запись с MikroTik по внутреннему ID RouterOS.
+    public function deleteRecordByRouterId(string $routerId): void
     {
-        $record = $this->findRecordById($id);
+        $routerId = trim($routerId);
 
-        if (!$record) {
-            throw new RuntimeException('DNS-запись не найдена.');
+        if ($routerId === '') {
+            throw new RuntimeException('Не выбрана DNS-запись.');
         }
 
-        $this->deleteRouterRecordForDbRecord($record);
-
-        $stmt = $this->db->prepare('DELETE FROM dns_records WHERE id = :id');
-        $stmt->execute(['id' => $id]);
+        $this->mikrotik->deleteDnsStaticRecordById($routerId);
     }
 
-    // Удаляет DNS-запись на MikroTik по ID или по доменному имени из записи БД.
-    private function deleteRouterRecordForDbRecord(array $record): void
-    {
-        $mikrotikId = (string) ($record['mikrotik_id'] ?? '');
+    // Удаляет старую DNS-запись этой же VM, если пользователь поменял доменное имя.
+    public function deleteProxmoxRecordForMachineIfDomainChanged(
+        string $node,
+        int $vmid,
+        string $type,
+        string $newDomainName
+    ): void {
+        $newDomainName = strtolower(trim($newDomainName));
+        $machineKey = $node . ':' . $vmid . ':' . $type;
 
-        if ($mikrotikId !== '') {
-            try {
-                $this->mikrotik->deleteDnsStaticRecordById($mikrotikId);
-                return;
-            } catch (Throwable) {
-                // Если ID на MikroTik уже не актуален, попробуем найти запись по имени.
+        $this->validateDomainName($newDomainName);
+
+        foreach ($this->listRecords() as $record) {
+            $recordKey = self::getRecordMachineKey($record);
+
+            if ($recordKey !== $machineKey) {
+                continue;
+            }
+
+            $recordName = strtolower((string) ($record['name'] ?? ''));
+            $routerId = (string) ($record['.id'] ?? '');
+
+            if ($recordName !== $newDomainName && $routerId !== '') {
+                $this->mikrotik->deleteDnsStaticRecordById($routerId);
             }
         }
+    }
 
-        $domainName = (string) ($record['domain_name'] ?? '');
-        if ($domainName === '') {
-            return;
+    // Извлекает ключ машины node:vmid:type из комментария DNS-записи MikroTik.
+    public static function getRecordMachineKey(array $record): ?string
+    {
+        $comment = (string) ($record['comment'] ?? '');
+
+        if (
+            preg_match('/\bnode=([^;]+)/', $comment, $nodeMatch)
+            && preg_match('/\bvmid=(\d+)/', $comment, $vmidMatch)
+            && preg_match('/\btype=([^;]+)/', $comment, $typeMatch)
+        ) {
+            return trim($nodeMatch[1]) . ':' . trim($vmidMatch[1]) . ':' . trim($typeMatch[1]);
         }
 
-        $routerRecord = $this->mikrotik->findDnsStaticRecordByName($domainName);
-
-        if ($routerRecord && !empty($routerRecord['.id'])) {
-            $this->mikrotik->deleteDnsStaticRecordById((string) $routerRecord['.id']);
-        }
+        return null;
     }
 
     // Проверяет доменное имя на пустоту, длину и корректный формат.
@@ -213,7 +135,7 @@ final class DnsService
         }
 
         if (!preg_match('/^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/', $domainName)) {
-            throw new RuntimeException('Некорректное доменное имя. Пример: vm100.lab.local');
+            throw new RuntimeException('Некорректное доменное имя. Пример: vm100.vnii.local');
         }
     }
 }

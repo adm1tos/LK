@@ -123,14 +123,14 @@ final class MikrotikService
 
     //////////дальше для DNS
 
-    // Получает список всех статических DNS-записей на MikroTik СТАРОЕ
-    /*public function getDnsStaticRecords(): array
+     // Получает список всех статических DNS-записей на MikroTik \уже не старое
+    public function getDnsStaticRecords(): array
     {
         $query = new Query('/ip/dns/static/print');
         $result = $this->client()->query($query)->read();
 
         return is_array($result) ? $result : [];
-    }*/
+    }
 
     // Ищет статическую DNS-запись на MikroTik по днс имени
     public function findDnsStaticRecordByName(string $name): ?array
@@ -143,13 +143,12 @@ final class MikrotikService
         return $result[0] ?? null;
     }
 
-    // Создает вченую DNS-запись на MikroTik и возвращает созданную запись
+        // Создает вченую DNS-запись на MikroTik и возвращает созданную запись
     public function addDnsStaticRecord(string $name, string $address, string $comment = ''): ?array
     {
         $query = (new Query('/ip/dns/static/add'))
             ->equal('name', $name)
-            ->equal('address', $address)
-            ->equal('ttl', $this->config['dns']['ttl'] ?? '1d');
+            ->equal('address', $address);
 
         if ($comment !== '') {
             $query->equal('comment', $comment);
@@ -160,14 +159,13 @@ final class MikrotikService
         return $this->findDnsStaticRecordByName($name);
     }
 
-    // Обновляет параметры существующей статической DNS-записи на MikroTik.
+        // Обновляет параметры существующей статической DNS-записи на MikroTik.
     public function updateDnsStaticRecord(string $id, string $name, string $address, string $comment = ''): void
     {
         $query = (new Query('/ip/dns/static/set'))
             ->equal('.id', $id)
             ->equal('name', $name)
-            ->equal('address', $address)
-            ->equal('ttl', $this->config['dns']['ttl'] ?? '1d');
+            ->equal('address', $address);
 
         if ($comment !== '') {
             $query->equal('comment', $comment);
@@ -176,7 +174,7 @@ final class MikrotikService
         $this->client()->query($query)->read();
     }
 
-    // Удаляет статическую DNS-запись на MikroTik по ID.
+        // Удаляет статическую DNS-запись на MikroTik по ID.
     public function deleteDnsStaticRecordById(string $id): void
     {
         $query = (new Query('/ip/dns/static/remove'))
@@ -184,5 +182,4 @@ final class MikrotikService
 
         $this->client()->query($query)->read();
     }
-
 }
