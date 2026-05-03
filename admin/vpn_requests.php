@@ -58,6 +58,7 @@ $stmt = db()->query('
     LEFT JOIN users reviewer ON reviewer.id = vr.reviewed_by
     ORDER BY FIELD(vr.status, "pending", "approved", "rejected"), vr.created_at DESC
 ');
+$requests = $stmt->fetchAll();
 
 require INCLUDES_PATH . '/header.php';
 ?>
