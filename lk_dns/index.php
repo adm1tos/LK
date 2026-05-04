@@ -54,7 +54,8 @@ function dns_vm_comment(array $machine, string $ipAddress): string
     $ram = dns_format_bytes($machine['maxmem'] ?? 0);
 
     return sprintf(
-        'LK DNS; source=proxmox; node=%s; vmid=%d; type=%s; name=%s; status=%s; cpu=%s; ram=%s; ip=%s',
+        //'LK DNS; source=proxmox; node=%s; vmid=%d; type=%s; name=%s; status=%s; cpu=%s; ram=%s; ip=%s',
+        'LK DNS; source=proxmox; node=%s; vmid=%d; type=%s; name=%s',
         $node,
         $vmid,
         $type,
