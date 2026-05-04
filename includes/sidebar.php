@@ -2,8 +2,20 @@
 
 if (!is_guest()):
 ?>
-    <aside class="sidebar">
-        <div class="sidebar-title">LK</div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">LK</div>
+
+            <button
+                class="sidebar-toggle"
+                type="button"
+                id="sidebarToggle"
+                aria-label="Свернуть меню"
+                aria-expanded="true"
+            >
+                ☰
+            </button>
+        </div>
 
         <nav class="sidebar-nav">
             <a href="/mainmenu/dashboard.php">Главная</a>
