@@ -136,7 +136,7 @@ th, td {
     .topbar-actions { justify-content: space-between; }
 }
 
-/* Галочка */
+/* Галочка в настройках */
 .checkbox-row {
     display: flex;
     align-items: center;
@@ -180,3 +180,22 @@ th, td {
 .btn-disabled:hover {
     background: #d1d5db;
 }
+
+/*Разделитель и заголовок в сайдбаре*/
+.sidebar-divider {
+    width: 100%;
+    height: 0;
+    border: none;
+    border-top: 1px solid rgba(146, 146, 146, 0.7);
+    margin: 14px 0 10px;
+}
+
+.sidebar-section-title {
+    padding: 0 14px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+/*Разделитель и заголовок в сайдбаре*/

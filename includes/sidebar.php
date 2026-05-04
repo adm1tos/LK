@@ -13,6 +13,8 @@ if (!is_guest()):
             <a href="/lk_dns/index.php">DNS</a>
 
             <?php if (is_admin()): ?>
+                <hr class="sidebar-divider">
+
                 <a href="/admin/vpn_requests.php">Заявки VPN</a>
                 <a href="/admin/vpn_settings.php">Настройки VPN</a>
                 <a href="/admin/vpn_peers.php">Пиры VPN</a>
