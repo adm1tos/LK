@@ -19,7 +19,10 @@
 
 ### Схемы
 <img width="969" height="685" alt="Sequence Создание DNS-записи для ВМ" src="https://github.com/user-attachments/assets/a8af8b66-f61e-458a-925e-7cd5b06fe800" />
+
 <img width="782" height="754" alt="Sequence Первое получение конфига ВПН" src="https://github.com/user-attachments/assets/1da69a74-2bc7-4182-8af7-595b6ed7d293" />
+
 <img width="1077" height="968" alt="Sequence Добавление SSH ключа в ВМ" src="https://github.com/user-attachments/assets/2399aa90-f97e-4736-b350-982581939a2b" />
 <img width="1188" height="1102" alt="С4-2 LK" src="https://github.com/user-attachments/assets/8f3711fd-07a9-4bc7-9b65-b1ce91cabe40" />
+
 <img width="671" height="1074" alt="С4-1 LK" src="https://github.com/user-attachments/assets/9845c26f-5821-46ed-95d3-b25c153c1e67" />
