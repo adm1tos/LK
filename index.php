@@ -21,8 +21,8 @@ require_once __DIR__ . '/includes/header.php';
         <p>Это начальная страница сайта. Для продолжения войдите в аккаунт.</p>
 
         <div class="actions">
-            <a class="btn btn-primary" href="/login.php">Войти</a>
-            <a class="btn btn-secondary" href="/register.php">Регистрация</a>
+            <a class="btn btn-primary" href="/auth/login.php">Войти</a>
+            <a class="btn btn-secondary" href="/auth/register.php">Регистрация</a>
         </div>
     </div>
 </div>

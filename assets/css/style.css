@@ -65,18 +65,69 @@ a {
     gap: 8px;
 }
 
-.sidebar-nav a {
+.sidebar-nav a,
+.sidebar-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 12px 14px;
     border-radius: 12px;
     color: #d1d5db;
+    cursor: pointer;
+    user-select: none;
 }
 
 .sidebar-nav a.active,
-.sidebar-nav a:hover {
+.sidebar-nav a:hover,
+.sidebar-group-title:hover {
     background: #1f2937;
     color: #fff;
 }
 
+.sidebar-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-group-title {
+    list-style: none;
+    font-weight: 600;
+}
+
+.sidebar-group-title::-webkit-details-marker {
+    display: none;
+}
+
+.sidebar-group-title::after {
+    content: "▾";
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-group:not([open]) .sidebar-group-title::after {
+    transform: rotate(-90deg);
+}
+
+.sidebar-subnav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.sidebar-subnav a {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #cbd5e1;
+}
+
+.sidebar-subnav a.active {
+    background: #1f2937;
+    color: #fff;
+}
 /* Разделитель между пользовательским и админским меню */
 .sidebar-divider {
     width: 100%;
@@ -412,4 +463,12 @@ td {
     body.sidebar-collapsed .sidebar-nav {
         display: none;
     }
+}
+/* Кнопка Яндекс */
+.btn-yandex {
+    background: #fc3f1d;
+}
+
+.btn-yandex:hover {
+    background: #d92f12;
 }

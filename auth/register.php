@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/includes/bootstrap.php';
+require dirname(__DIR__) . '/includes/bootstrap.php';
 
 if (current_user()) {
     redirect('mainmenu/dashboard.php');
@@ -140,9 +140,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input id="password_confirm" type="password" name="password_confirm" required>
 
             <button class="btn" type="submit">Зарегистрироваться</button>
+            <div class="btn-row">
+                <a class="btn btn-yandex" href="<?= e(url('auth/yandex/start.php')) ?>">
+                    Зарегистрироваться через Яндекс
+                </a>
+            </div>
         </form>
 
-        <p>Уже есть аккаунт? <a href="<?= e(url('login.php')) ?>">Войти</a></p>
+        <p>Уже есть аккаунт? <a href="<?= e(url('auth/login.php')) ?>">Войти</a></p>
     </div>
 </div>
 </body>

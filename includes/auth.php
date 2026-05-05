@@ -52,7 +52,7 @@ function require_auth(): void
 {
     if (is_guest()) {
         flash('error', 'Сначала войдите в аккаунт.');
-        redirect('login.php');
+        redirect('auth/login.php');
     }
 }
 

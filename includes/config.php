@@ -137,9 +137,16 @@ return [
 
     'ssh_admin' => [
         'private_key_path' => env_value('SSH_ADMIN_PRIVATE_KEY_PATH', 'storage/keys/lkadmin_site_id_ed25519'),
+        'script_path' => env_value('SSH_ADMIN_SCRIPT_PATH', 'storage/scripts/lk-ssh-admin.sh'),
     ],
 
     'dns' => [
         'default_zone' => env_value('DNS_DEFAULT_ZONE', 'vnii.local'),
+    ],
+
+    'yandex' => [
+    'client_id' => env_value('YANDEX_CLIENT_ID', ''),
+    'client_secret' => env_value('YANDEX_CLIENT_SECRET', ''),
+    'redirect_uri' => env_value('YANDEX_REDIRECT_URI', ''),
     ],
 ];

@@ -31,7 +31,7 @@ require INCLUDES_PATH . '/header.php';
 
 <section class="card">
     <h2>Активные машины</h2>
-    <p class="muted">Показаны только включённые машины. SSH пока настроен только для тестовой VM.</p>
+    <p class="muted">Показаны только включённые машины.</p>
 
     <?php if (!$machines): ?>
         <p>Активные машины не найдены.</p>

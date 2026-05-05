@@ -3,7 +3,7 @@
 // отображается при попытке входа в аккаунт без авторизации
 declare(strict_types=1);
 
-require __DIR__ . '/includes/bootstrap.php';
+require dirname(__DIR__) . '/includes/bootstrap.php';
 
 if (current_user()) {
     redirect('mainmenu/dashboard.php');
@@ -73,9 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input id="password" type="password" name="password" required>
 
             <button class="btn" type="submit">Войти</button>
+
+            <div class="btn-row">
+                <a class="btn btn-yandex" href="<?= e(url('auth/yandex/start.php')) ?>">
+                    Войти через Яндекс
+                </a>
+            </div>
         </form>
 
-        <p>Нет аккаунта? <a href="<?= e(url('register.php')) ?>">Зарегистрироваться</a></p>
+        <p>Нет аккаунта? <a href="<?= e(url('auth/register.php')) ?>">Зарегистрироваться</a></p>
     </div>
 </div>
 </body>

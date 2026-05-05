@@ -68,13 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-#try {
-#    $users = $vmSsh->listUsers($node, $vmid, $type);
-#} catch (Throwable $e) {
-#    flash('error', 'Не удалось получить список пользователей VM: ' . $e->getMessage());
-#    $users = [];
-#}
 try {
+    $users = $vmSsh->listUsers($node, $vmid, $type);
+} catch (Throwable $e) {
+    flash('error', 'Не удалось получить список пользователей VM: ' . $e->getMessage());
+    $users = [];
+}
+/*try {
     $users = $vmSsh->listUsers($node, $vmid, $type);
 } catch (Throwable $e) {
     echo '<pre>';
@@ -85,7 +85,7 @@ try {
     echo "Trace:\n" . $e->getTraceAsString() . "\n";
     echo '</pre>';
     exit;
-}
+}*/
 
 $keyStmt = db()->prepare('
     SELECT id, key_name, public_key, created_at

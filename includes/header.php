@@ -26,10 +26,10 @@
                         <strong><?= e(user_display_name($user)) ?></strong>
                         <span><?= e($user['role']) ?></span>
                     </div>
-                    <a class="btn btn-secondary" href="<?= e(url('logout.php')) ?>">Выйти</a>
+                    <a class="btn btn-secondary" href="<?= e(url('auth/logout.php')) ?>">Выйти</a>
                 <?php else: ?>
-                    <a class="btn btn-secondary" href="<?= e(url('login.php')) ?>">Вход</a>
-                    <a class="btn" href="<?= e(url('register.php')) ?>">Регистрация</a>
+                    <a class="btn btn-secondary" href="<?= e(url('auth/login.php')) ?>">Вход</a>
+                    <a class="btn" href="<?= e(url('auth/register.php')) ?>">Регистрация</a>
                 <?php endif; ?>
             </div>
         </header>
