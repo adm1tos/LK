@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    container_name: lk_app
+    ports:
+      - "80:80"
+    volumes:
+      - ./.env:/var/www/html/.env:ro
+      - ./storage:/var/www/html/storage
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    container_name: lk_db
+    environment:
+      MYSQL_DATABASE: lk
+      MYSQL_USER: lk
+      MYSQL_PASSWORD: lk_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - lk_db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: lk_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  lk_db_data:

@@ -16,7 +16,8 @@ try {
     $service = new ProxmoxService($config);
     $machines = $service->listActiveMachines();
 } catch (Throwable $e) {
-    flash('error', 'Не удалось получить список машин Proxmox: ' . $e->getMessage());
+    //flash('error', 'Не удалось получить список машин Proxmox: ' . $e->getMessage());
+    flash('error', 'Не удалось получить список машин Proxmox.');
 }
 
 $vmSsh = new VmSshService($config);
