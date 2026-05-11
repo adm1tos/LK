@@ -47,6 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             flash('success', 'DNS-запись удалена.');
+        } elseif ($action === 'edit') {
+            $routerId = trim((string) ($_POST['router_id'] ?? ''));
+            $name = trim((string) ($_POST['name'] ?? ''));
+            $address = trim((string) ($_POST['address'] ?? ''));
+            $comment = trim((string) ($_POST['comment'] ?? ''));
+
+            if ($routerId === '') {
+                throw new RuntimeException('Не выбран ID записи.');
+            }
+
+            $mikrotik->updateDnsStaticRecord($routerId, $name, $address, $comment);
+
+            $logger = new LoggerService(db());
+            $logger->log('update', 'dns_record_mikrotik', null, sprintf('Обновлена DNS-запись MikroTik: %s → %s', $name, $address));
+
+            flash('success', 'DNS-запись успешно обновлена.');
         } else {
             throw new RuntimeException('Неизвестное действие.');
         }
@@ -100,7 +116,7 @@ require INCLUDES_PATH . '/header.php';
                     $comment = (string) ($record['comment'] ?? '');
                     $ttl = (string) ($record['ttl'] ?? '—');
                     ?>
-                    <tr>
+                    <tr id="row-view-<?= e($displayId) ?>">
                         <td><code><?= e($name) ?></code></td>
                         <td><?= e($address) ?></td>
                         <td><?= e($comment !== '' ? $comment : '—') ?></td>
@@ -108,18 +124,39 @@ require INCLUDES_PATH . '/header.php';
                         <td><code><?= e($displayId !== '' ? $displayId : '—') ?></code></td>
                         <td>
                             <?php if ($routerId !== ''): ?>
-                                <form method="post" onsubmit="return confirm('Удалить DNS-запись с MikroTik?');">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="router_id" value="<?= e($routerId) ?>">
-                                    <button class="btn btn-danger" type="submit" name="action" value="delete">
-                                        Удалить
-                                    </button>
-                                </form>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-secondary" type="button" onclick="toggleEdit('<?= e($displayId) ?>')">Ред.</button>
+                                    <form method="post" onsubmit="return confirm('Удалить DNS-запись с MikroTik?');" style="margin:0;">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="router_id" value="<?= e($routerId) ?>">
+                                        <button class="btn btn-danger" type="submit" name="action" value="delete">
+                                            Удалить
+                                        </button>
+                                    </form>
+                                </div>
                             <?php else: ?>
                                 <span class="muted">Нет ID</span>
                             <?php endif; ?>
                         </td>
                     </tr>
+                    <?php if ($routerId !== ''): ?>
+                    <tr id="row-edit-<?= e($displayId) ?>" style="display: none;">
+                        <td colspan="6">
+                            <form method="post" class="inline-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0; padding: 10px 0;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="edit">
+                                <input type="hidden" name="router_id" value="<?= e($routerId) ?>">
+                                
+                                <input type="text" name="name" value="<?= e($name) ?>" required placeholder="Домен" style="min-width: 200px;">
+                                <input type="text" name="address" value="<?= e($address) ?>" required placeholder="IP адрес" style="min-width: 150px;">
+                                <input type="text" name="comment" value="<?= e($comment) ?>" placeholder="Комментарий" style="min-width: 200px;">
+                                
+                                <button class="btn" type="submit">Сохранить</button>
+                                <button class="btn btn-secondary" type="button" onclick="toggleEdit('<?= e($displayId) ?>')">Отмена</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 <?php endforeach; ?>
                 </tbody>
             </table>
@@ -127,4 +164,17 @@ require INCLUDES_PATH . '/header.php';
     <?php endif; ?>
 </section>
 
+<script>
+function toggleEdit(id) {
+    const viewRow = document.getElementById('row-view-' + id);
+    const editRow = document.getElementById('row-edit-' + id);
+    if (viewRow.style.display === 'none') {
+        viewRow.style.display = '';
+        editRow.style.display = 'none';
+    } else {
+        viewRow.style.display = 'none';
+        editRow.style.display = '';
+    }
+}
+</script>
 <?php require INCLUDES_PATH . '/footer.php'; ?>

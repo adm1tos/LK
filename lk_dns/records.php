@@ -51,6 +51,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             flash('success', 'DNS-запись удалена.');
+        } elseif ($action === 'edit_user_dns') {
+            $recordId = (int) ($_POST['record_id'] ?? 0);
+            $domainName = trim((string) ($_POST['domain_name'] ?? ''));
+            $ipAddress = trim((string) ($_POST['ip_address'] ?? ''));
+            $comment = trim((string) ($_POST['comment'] ?? ''));
+
+            if ($recordId <= 0) {
+                throw new RuntimeException('Не выбрана DNS-запись.');
+            }
+
+            $dnsService->updateUserRecord($recordId, $domainName, $ipAddress, $comment, $userId);
+
+            $logger = new LoggerService(db());
+            $logger->log('update', 'dns_record', $recordId, sprintf('Изменена DNS-запись: %s → %s', $domainName, $ipAddress));
+
+            flash('success', 'DNS-запись успешно обновлена.');
         } else {
             throw new RuntimeException('Неизвестное действие.');
         }
@@ -104,7 +120,7 @@ require INCLUDES_PATH . '/header.php';
                 </thead>
                 <tbody>
                 <?php foreach ($userRecords as $record): ?>
-                    <tr>
+                    <tr id="row-view-<?= e((string) $record['id']) ?>">
                         <td><code><?= e((string) $record['domain_name']) ?></code></td>
                         <td><?= e((string) $record['ip_address']) ?></td>
                         <td>
@@ -126,12 +142,31 @@ require INCLUDES_PATH . '/header.php';
                         </td>
                         <td><?= e((string) ($record['created_at'] ?? '—')) ?></td>
                         <td>
-                            <form method="post" onsubmit="return confirm('Удалить DNS-запись?');">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" type="button" onclick="toggleEdit('<?= e((string) $record['id']) ?>')">Ред.</button>
+                                <form method="post" onsubmit="return confirm('Удалить DNS-запись?');" style="margin:0;">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="record_id" value="<?= e((string) $record['id']) ?>">
+                                    <button class="btn btn-danger" type="submit" name="action" value="delete_user_dns">
+                                        Удалить
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="row-edit-<?= e((string) $record['id']) ?>" style="display: none;">
+                        <td colspan="6">
+                            <form method="post" class="inline-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0; padding: 10px 0;">
                                 <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="edit_user_dns">
                                 <input type="hidden" name="record_id" value="<?= e((string) $record['id']) ?>">
-                                <button class="btn btn-danger" type="submit" name="action" value="delete_user_dns">
-                                    Удалить
-                                </button>
+                                
+                                <input type="text" name="domain_name" value="<?= e((string) $record['domain_name']) ?>" required placeholder="Домен" style="min-width: 200px;">
+                                <input type="text" name="ip_address" value="<?= e((string) $record['ip_address']) ?>" required placeholder="IP адрес" style="min-width: 150px;">
+                                <input type="text" name="comment" value="<?= e((string) ($record['record_comment'] ?? '')) ?>" placeholder="Комментарий" style="min-width: 200px;">
+                                
+                                <button class="btn" type="submit">Сохранить</button>
+                                <button class="btn btn-secondary" type="button" onclick="toggleEdit('<?= e((string) $record['id']) ?>')">Отмена</button>
                             </form>
                         </td>
                     </tr>
@@ -142,4 +177,17 @@ require INCLUDES_PATH . '/header.php';
     <?php endif; ?>
 </section>
 
+<script>
+function toggleEdit(id) {
+    const viewRow = document.getElementById('row-view-' + id);
+    const editRow = document.getElementById('row-edit-' + id);
+    if (viewRow.style.display === 'none') {
+        viewRow.style.display = '';
+        editRow.style.display = 'none';
+    } else {
+        viewRow.style.display = 'none';
+        editRow.style.display = '';
+    }
+}
+</script>
 <?php require INCLUDES_PATH . '/footer.php'; ?>

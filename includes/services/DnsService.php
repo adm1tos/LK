@@ -300,6 +300,74 @@ final class DnsService
         ]);
     }
 
+    // Обновляет существующую пользовательскую DNS-запись (имя, IP, комментарий).
+    public function updateUserRecord(
+        int $recordId,
+        string $newDomainName,
+        string $newIpAddress,
+        string $newComment,
+        int $userId
+    ): void {
+        $record = $this->findDbRecordById($recordId);
+
+        if (!$record) {
+            throw new RuntimeException('DNS-запись не найдена.');
+        }
+
+        if ((int) $record['created_by'] !== $userId) {
+            throw new RuntimeException('У вас нет прав на редактирование этой записи.');
+        }
+
+        $newDomainName = strtolower(trim($newDomainName));
+        $newIpAddress = trim($newIpAddress);
+        $newComment = trim($newComment);
+
+        $this->validateDomainName($newDomainName);
+
+        if (!filter_var($newIpAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            throw new RuntimeException('Некорректный IPv4-адрес.');
+        }
+
+        if (strtolower((string) $record['domain_name']) !== $newDomainName) {
+            $stmt = $this->db->prepare('SELECT id FROM dns_records WHERE domain_name = :domain_name AND id != :id LIMIT 1');
+            $stmt->execute(['domain_name' => $newDomainName, 'id' => $recordId]);
+            if ($stmt->fetch()) {
+                throw new RuntimeException('Такое DNS-имя уже используется.');
+            }
+
+            $routerRecord = $this->mikrotik->findDnsStaticRecordByName($newDomainName);
+            if ($routerRecord) {
+                throw new RuntimeException('Такая DNS-запись уже существует на MikroTik. Обратись к администратору.');
+            }
+        }
+
+        $mikrotikId = (string) ($record['mikrotik_id'] ?? '');
+        if ($mikrotikId === '') {
+            $oldRouterRecord = $this->mikrotik->findDnsStaticRecordByName((string) $record['domain_name']);
+            if ($oldRouterRecord && !empty($oldRouterRecord['.id'])) {
+                $mikrotikId = (string) $oldRouterRecord['.id'];
+            }
+        }
+
+        if ($mikrotikId !== '') {
+            try {
+                $this->mikrotik->updateDnsStaticRecord($mikrotikId, $newDomainName, $newIpAddress, $newComment);
+            } catch (Throwable) {
+                $newRouterRecord = $this->mikrotik->addDnsStaticRecord($newDomainName, $newIpAddress, $newComment);
+                $mikrotikId = (string) ($newRouterRecord['.id'] ?? '');
+            }
+        } else {
+            $newRouterRecord = $this->mikrotik->addDnsStaticRecord($newDomainName, $newIpAddress, $newComment);
+            $mikrotikId = (string) ($newRouterRecord['.id'] ?? '');
+        }
+
+        $stmt = $this->db->prepare('UPDATE dns_records SET domain_name = :domain_name, ip_address = :ip_address, record_comment = :record_comment, mikrotik_id = :mikrotik_id, updated_at = NOW() WHERE id = :id');
+        $stmt->execute([
+            'domain_name' => $newDomainName, 'ip_address' => $newIpAddress,
+            'record_comment' => $newComment !== '' ? $newComment : null, 'mikrotik_id' => $mikrotikId !== '' ? $mikrotikId : null, 'id' => $recordId,
+        ]);
+    }
+
     // Удаляет пользовательскую DNS-запись из MikroTik и БД.
     public function deleteUserRecord(int $recordId, int $userId): void
     {
