@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Хост: db
--- Время создания: Май 06 2026 г., 06:25
--- Версия сервера: 11.8.6-MariaDB-ubu2404
--- Версия PHP: 8.3.30
+-- Хост: 127.0.0.1
+-- Время создания: Май 11 2026 г., 13:07
+-- Версия сервера: 10.4.32-MariaDB
+-- Версия PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -147,7 +147,10 @@ CREATE TABLE `vpn_requests` (
 --
 ALTER TABLE `admin_logs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `admin_id` (`admin_id`);
+  ADD KEY `admin_id` (`admin_id`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_action_type` (`action_type`),
+  ADD KEY `idx_target_type` (`target_type`);
 
 --
 -- Индексы таблицы `dns_records`
