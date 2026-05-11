@@ -36,7 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ((int) $user['is_active'] !== 1) {
             $errors[] = 'Аккаунт отключен.';
         } else {
-            login_user((int) $user['id']);
+            $userId = (int) $user['id'];
+
+            // Логируем вход
+            $logger = new LoggerService(db());
+            $logger->log('login', 'user', $userId, 'Вход в систему');
+
+            login_user($userId);
             flash('success', 'Вы вошли в LK.');
             redirect('mainmenu/dashboard.php');
         }

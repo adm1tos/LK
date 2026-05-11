@@ -21,6 +21,15 @@ require INCLUDES_PATH . '/header.php';
         <p><strong>Имя:</strong> <?= e(user_display_name($user)) ?></p>
         <p><strong>Email:</strong> <?= e($user['email']) ?></p>
         <p><strong>Роль:</strong> <?= e($user['role']) ?></p>
+        <p>
+            <strong>Привязка Яндекс:</strong> 
+            <?php if (!empty($user['yandex_id'])): ?>
+                <span class="badge badge-approved">Привязан</span>
+            <?php else: ?>
+                <span class="badge badge-pending">Не привязан</span>
+                <a href="<?= e(url('auth/yandex/start.php')) ?>" class="btn btn-secondary" style="padding: 2px 10px; margin-left: 10px; text-decoration: none; font-size: 0.9em;">Привязать Яндекс</a>
+            <?php endif; ?>
+        </p>
     </section>
     <!--<section class="card">???????????????
         <h2>VPN модуль</h2>

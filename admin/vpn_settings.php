@@ -21,14 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update = db()->prepare('UPDATE settings SET setting_value = :value WHERE setting_key = :key');
     $update->execute(['value' => $allowRegen, 'key' => 'allow_regen']);
     $update->execute(['value' => $lastIpCount, 'key' => 'last_ip_count']);
-// записываем в лог изменения настроек
-    $log = db()->prepare('INSERT INTO admin_logs (admin_id, action_type, target_type, details) VALUES (:admin_id, :action_type, :target_type, :details)');
-    $log->execute([
-        'admin_id' => $admin['id'],
-        'action_type' => 'vpn_settings_update',
-        'target_type' => 'settings',
-        'details' => 'allow_regen=' . $allowRegen . '; last_ip_count=' . $lastIpCount,
-    ]);
+// записываем в лог изменения настроек через LoggerService
+    $logger = new LoggerService(db());
+    $logger->log(
+        'vpn_settings_update',
+        'settings',
+        null,
+        'allow_regen=' . $allowRegen . '; last_ip_count=' . $lastIpCount
+    );
 
     flash('success', 'VPN настройки обновлены.');
     redirect('admin/vpn_settings.php');

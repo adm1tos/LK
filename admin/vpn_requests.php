@@ -22,15 +22,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'reviewed_by' => $admin['id'],
             'id' => $requestId,
         ]);
-// записываем в лог изменения статуса заявки
-        $log = db()->prepare('INSERT INTO admin_logs (admin_id, action_type, target_type, target_id, details) VALUES (:admin_id, :action_type, :target_type, :target_id, :details)');
-        $log->execute([
-            'admin_id' => $admin['id'],
-            'action_type' => 'vpn_request_' . $status,
-            'target_type' => 'vpn_request',
-            'target_id' => $requestId,
-            'details' => 'Статус заявки изменен на ' . $status,
-        ]);
+// записываем в лог изменения статуса заявки через LoggerService
+        $logger = new LoggerService(db());
+        $logger->log(
+            'vpn_request_' . $status,
+            'vpn_request',
+            $requestId,
+            'Статус заявки изменен на ' . $status
+        );
         flash('success', 'Статус заявки обновлен.');
     }
 

@@ -17,6 +17,7 @@ final class ProxmoxService
             'password' => $this->config['proxmox']['password'],
             'realm' => $this->config['proxmox']['realm'],
             'port' => $this->config['proxmox']['port'],
+            'fake_ssl' => true,
         ];
 
         $this->client = new Proxmox($credentials);

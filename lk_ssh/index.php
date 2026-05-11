@@ -70,6 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'public_key' => $publicKey,
             ]);
 
+            $keyId = (int) db()->lastInsertId();
+
+            // Логируем добавление SSH-ключа
+            $logger = new LoggerService(db());
+            $logger->log(
+                'create',
+                'ssh_key',
+                $keyId,
+                sprintf('Добавлен SSH-ключ: %s', $keyName)
+            );
+
             flash('success', 'SSH-ключ добавлен.');
         } elseif ($action === 'delete') {
             // Удаляет выбранный SSH-ключ, если он принадлежит текущему пользователю.
@@ -79,6 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Не передан идентификатор ключа.');
             }
 
+            // Получаем информацию о ключе перед удалением для логирования
+            $stmt = db()->prepare('SELECT key_name FROM ssh_keys WHERE id = :id AND user_id = :user_id LIMIT 1');
+            $stmt->execute([
+                'id' => $keyId,
+                'user_id' => $user['id'],
+            ]);
+            $keyInfo = $stmt->fetch();
+
             $stmt = db()->prepare('DELETE FROM ssh_keys WHERE id = :id AND user_id = :user_id');
             $stmt->execute([
                 'id' => $keyId,
@@ -87,6 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt->rowCount() === 0) {
                 throw new RuntimeException('Ключ не найден или у тебя нет прав на его удаление.');
+            }
+
+            // Логируем удаление SSH-ключа
+            if ($keyInfo) {
+                $logger = new LoggerService(db());
+                $logger->log(
+                    'delete',
+                    'ssh_key',
+                    $keyId,
+                    sprintf('Удален SSH-ключ: %s', $keyInfo['key_name'])
+                );
             }
 
             flash('success', 'SSH-ключ удалён.');

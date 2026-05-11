@@ -20,7 +20,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'delete') {
             $routerId = trim((string) ($_POST['router_id'] ?? ''));
 
+            // Получаем информацию о записи перед удалением для логирования
+            $records = $dnsService->listRouterRecords();
+            $recordInfo = null;
+            foreach ($records as $record) {
+                if (($record['.id'] ?? '') === $routerId) {
+                    $recordInfo = $record;
+                    break;
+                }
+            }
+
             $dnsService->deleteRouterRecordById($routerId);
+
+            // Логируем удаление DNS-записи
+            $logger = new LoggerService(db());
+            $logger->log(
+                'delete',
+                'dns_record_mikrotik',
+                null,
+                sprintf(
+                    'Удалена DNS-запись с MikroTik: %s → %s (router_id=%s)',
+                    $recordInfo['name'] ?? 'unknown',
+                    $recordInfo['address'] ?? 'unknown',
+                    $routerId
+                )
+            );
 
             flash('success', 'DNS-запись удалена.');
         } else {
@@ -62,7 +86,7 @@ require INCLUDES_PATH . '/header.php';
                     <th>IP</th>
                     <th>Комментарий</th>
                     <th>TTL</th>
-                    <th>Router ID</th>
+                    <th>ID</th>
                     <th>Действие</th>
                 </tr>
                 </thead>
@@ -70,6 +94,7 @@ require INCLUDES_PATH . '/header.php';
                 <?php foreach ($records as $record): ?>
                     <?php
                     $routerId = (string) ($record['.id'] ?? '');
+                    $displayId = str_starts_with($routerId, '*') ? (string) hexdec(substr($routerId, 1)) : $routerId;
                     $name = (string) ($record['name'] ?? '—');
                     $address = (string) ($record['address'] ?? '—');
                     $comment = (string) ($record['comment'] ?? '');
@@ -80,7 +105,7 @@ require INCLUDES_PATH . '/header.php';
                         <td><?= e($address) ?></td>
                         <td><?= e($comment !== '' ? $comment : '—') ?></td>
                         <td><?= e($ttl !== '' ? $ttl : '—') ?></td>
-                        <td><code><?= e($routerId !== '' ? $routerId : '—') ?></code></td>
+                        <td><code><?= e($displayId !== '' ? $displayId : '—') ?></code></td>
                         <td>
                             <?php if ($routerId !== ''): ?>
                                 <form method="post" onsubmit="return confirm('Удалить DNS-запись с MikroTik?');">

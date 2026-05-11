@@ -81,7 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'role' => 'user',
         ]);
 
-        login_user((int) db()->lastInsertId());
+        $newUserId = (int) db()->lastInsertId();
+
+        // Логируем регистрацию
+        $logger = new LoggerService(db());
+        $logger->log('register', 'user', $newUserId, 'Регистрация нового пользователя');
+
+        login_user($newUserId);
         flash('success', 'Аккаунт создан. Добро пожаловать в LK.');
         redirect('mainmenu/dashboard.php');
     }

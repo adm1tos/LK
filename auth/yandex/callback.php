@@ -51,6 +51,37 @@ try {
         $firstName = $displayName !== '' ? $displayName : ($login !== '' ? $login : 'Пользователь');
     }
 
+    $currentUser = current_user();
+
+    if ($currentUser !== null) {
+        $stmt = db()->prepare('SELECT id FROM users WHERE yandex_id = :yandex_id AND id != :current_id LIMIT 1');
+        $stmt->execute([
+            'yandex_id' => $yandexId,
+            'current_id' => $currentUser['id'],
+        ]);
+
+        if ($stmt->fetch()) {
+            throw new RuntimeException('Этот аккаунт Яндекс уже привязан к другому пользователю.');
+        }
+
+        $stmt = db()->prepare('
+            UPDATE users 
+            SET yandex_id = :yandex_id, yandex_email = :yandex_email, yandex_linked_at = NOW() 
+            WHERE id = :id
+        ');
+        $stmt->execute([
+            'yandex_id' => $yandexId,
+            'yandex_email' => $email,
+            'id' => $currentUser['id'],
+        ]);
+
+        $logger = new LoggerService(db());
+        $logger->log('link_yandex', 'user', (int) $currentUser['id'], 'Привязка аккаунта Яндекс');
+
+        flash('success', 'Аккаунт Яндекс успешно привязан.');
+        redirect('mainmenu/dashboard.php');
+    }
+
     // 1. Если Яндекс уже привязан к пользователю — входим.
     $stmt = db()->prepare('
         SELECT id, is_active
@@ -69,6 +100,10 @@ try {
         if ((int) ($linkedUser['is_active'] ?? 1) !== 1) {
             throw new RuntimeException('Учётная запись отключена.');
         }
+
+        // Логируем вход через Яндекс
+        $logger = new LoggerService(db());
+        $logger->log('login_yandex', 'user', $linkedUser['id'], 'Вход через Яндекс OAuth');
 
         login_user((int) $linkedUser['id']);
         flash('success', 'Вход через Яндекс выполнен.');
@@ -147,6 +182,10 @@ try {
     if ($newUserId <= 0) {
         throw new RuntimeException('Не удалось получить ID созданного пользователя.');
     }
+
+    // Логируем регистрацию через Яндекс
+    $logger = new LoggerService(db());
+    $logger->log('register_yandex', 'user', $newUserId, 'Регистрация через Яндекс OAuth');
 
     login_user($newUserId);
 

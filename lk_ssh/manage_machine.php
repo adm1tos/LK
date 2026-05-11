@@ -53,9 +53,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'add') {
             $vmSsh->addKey($node, $vmid, $type, $linuxUser, (string) $key['public_key']);
+
+            // Логируем добавление SSH-ключа к VM
+            $logger = new LoggerService(db());
+            $logger->log(
+                'grant_access',
+                'vm_ssh',
+                $vmid,
+                sprintf('Добавлен SSH-ключ "%s" пользователю %s на VM (node=%s, vmid=%d)', $key['key_name'], $linuxUser, $node, $vmid)
+            );
+
             flash('success', 'SSH-ключ добавлен пользователю ' . $linuxUser . '.');
         } elseif ($action === 'remove') {
             $vmSsh->removeKey($node, $vmid, $type, $linuxUser, (string) $key['public_key']);
+
+            // Логируем отзыв SSH-ключа у VM
+            $logger = new LoggerService(db());
+            $logger->log(
+                'revoke_access',
+                'vm_ssh',
+                $vmid,
+                sprintf('Отозван SSH-ключ "%s" у пользователя %s на VM (node=%s, vmid=%d)', $key['key_name'], $linuxUser, $node, $vmid)
+            );
+
             flash('success', 'SSH-ключ удалён у пользователя ' . $linuxUser . '.');
         } else {
             throw new RuntimeException('Неизвестное действие.');

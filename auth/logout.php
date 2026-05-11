@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/includes/bootstrap.php';
 
-if (current_user()) {
+$user = current_user();
+
+if ($user) {
+    // Логируем выход до разлогинивания
+    $logger = new LoggerService(db());
+    $logger->log('logout', 'user', $user['id'], 'Выход из системы');
+
     logout_user();
 }
 

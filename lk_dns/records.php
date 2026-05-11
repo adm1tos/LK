@@ -32,7 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Не выбрана DNS-запись.');
             }
 
+            // Получаем информацию о записи перед удалением для логирования
+            $stmt = db()->prepare('SELECT domain_name, ip_address FROM dns_records WHERE id = :id AND created_by = :user_id LIMIT 1');
+            $stmt->execute(['id' => $recordId, 'user_id' => $userId]);
+            $recordInfo = $stmt->fetch();
+
             $dnsService->deleteUserRecord($recordId, $userId);
+
+            // Логируем удаление DNS-записи
+            if ($recordInfo) {
+                $logger = new LoggerService(db());
+                $logger->log(
+                    'delete',
+                    'dns_record',
+                    $recordId,
+                    sprintf('Удалена DNS-запись: %s → %s', $recordInfo['domain_name'], $recordInfo['ip_address'])
+                );
+            }
 
             flash('success', 'DNS-запись удалена.');
         } else {

@@ -28,3 +28,4 @@ require_once INCLUDES_PATH . '/services/ProxmoxService.php';
 require_once INCLUDES_PATH . '/services/DnsService.php';
 
 require_once INCLUDES_PATH . '/services/YandexAuthService.php';
+require_once INCLUDES_PATH . '/services/LoggerService.php';

@@ -26,26 +26,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $isCurrentlyDisabled = in_array(strtolower($currentDisabled), ['true', 'yes', '1'], true);
             $newDisabled = !$isCurrentlyDisabled;
             $mikrotik->togglePeerById($peerId, $newDisabled);
-// записываем в лог изменения статуса пира
-            $log = db()->prepare('INSERT INTO admin_logs (admin_id, action_type, target_type, details) VALUES (:admin_id, :action_type, :target_type, :details)');
-            $log->execute([
-                'admin_id' => $admin['id'],
-                'action_type' => 'vpn_peer_toggle',
-                'target_type' => 'mikrotik_peer',
-                'details' => 'peer_id=' . $peerId . '; disabled=' . ($newDisabled ? '1' : '0'),
-            ]);
+// записываем в лог изменения статуса пира через LoggerService
+            $logger = new LoggerService(db());
+            $logger->log(
+                'vpn_peer_toggle',
+                'mikrotik_peer',
+                null,
+                'peer_id=' . $peerId . '; disabled=' . ($newDisabled ? '1' : '0')
+            );
 
             flash('success', $newDisabled ? 'Пир отключен.' : 'Пир включен.');
         } elseif ($action === 'delete') {
             $mikrotik->deletePeerById($peerId);
-// записываем в лог удаление пира
-            $log = db()->prepare('INSERT INTO admin_logs (admin_id, action_type, target_type, details) VALUES (:admin_id, :action_type, :target_type, :details)');
-            $log->execute([
-                'admin_id' => $admin['id'],
-                'action_type' => 'vpn_peer_delete',
-                'target_type' => 'mikrotik_peer',
-                'details' => 'peer_id=' . $peerId,
-            ]);
+// записываем в лог удаление пира через LoggerService
+            $logger = new LoggerService(db());
+            $logger->log(
+                'vpn_peer_delete',
+                'mikrotik_peer',
+                null,
+                'peer_id=' . $peerId
+            );
 
             flash('success', 'Пир удален.');
         } else {
@@ -86,7 +86,7 @@ require INCLUDES_PATH . '/header.php';
             <table>
                 <thead>
                 <tr>
-                    <th>.id</th>
+                    <th>ID</th>
                     <th>Интерфейс</th>
                     <th>Public key</th>
                     <th>Allowed address</th>
@@ -99,6 +99,7 @@ require INCLUDES_PATH . '/header.php';
                 <?php foreach ($peers as $peer): ?>
                     <?php
                     $peerId = (string) ($peer['.id'] ?? '');
+                    $displayId = str_starts_with($peerId, '*') ? (string) hexdec(substr($peerId, 1)) : $peerId;
                     $publicKey = (string) ($peer['public-key'] ?? '—');
                     $allowedAddress = (string) ($peer['allowed-address'] ?? '—');
                     $comment = (string) ($peer['comment'] ?? '');
@@ -107,7 +108,7 @@ require INCLUDES_PATH . '/header.php';
                     $isDisabled = in_array($disabledRaw, ['true', 'yes', '1'], true);
                     ?>
                     <tr>
-                        <td><code><?= e($peerId) ?></code></td>
+                        <td><code><?= e($displayId !== '' ? $displayId : '—') ?></code></td>
                         <td><?= e($interface) ?></td>
                         <td><code><?= e($publicKey) ?></code></td>
                         <td><code><?= e($allowedAddress) ?></code></td>

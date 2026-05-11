@@ -472,3 +472,116 @@ td {
 .btn-yandex:hover {
     background: #d92f12;
 }
+
+/* Фильтры логов*/
+.filter-form {
+    margin: 0;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-group label {
+    font-size: 0.85em;
+    color: #6b7280;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95em;
+    margin-bottom: 0;
+}
+
+.filter-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-self: flex-end;
+}
+
+/* Заголовок логов */
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.logs-header h2 {
+    margin: 0;
+}
+
+.logs-header p {
+    margin: 0;
+}
+
+/* Таблица логов */
+.log-details {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.log-time {
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Пагинация */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 0.95em;
+}
+
+/* Адаптация логов */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .filter-actions {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .filter-actions .btn {
+        flex: 1;
+    }
+
+    .log-details {
+        max-width: 150px;
+    }
+}

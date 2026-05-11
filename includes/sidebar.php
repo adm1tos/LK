@@ -140,11 +140,18 @@ if (!is_guest()):
                         >
                             Пиры VPN
                         </a>
-                                                <a
+                        <a
                             href="<?= e(url('admin/dns_records.php')) ?>"
                             class="<?= e($isActive('admin/dns_records.php')) ?>"
                         >
                             DNS-записи
+                        </a>
+
+                        <a
+                            href="<?= e(url('admin/logs.php')) ?>"
+                            class="<?= e($isActive('admin/logs.php')) ?>"
+                        >
+                            Логи действий
                         </a>
                     </div>
                 </details>

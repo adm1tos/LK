@@ -124,6 +124,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userId
             );
 
+            // Получаем ID записи для логирования
+            $stmt = db()->prepare('SELECT id FROM dns_records WHERE domain_name = :domain_name AND created_by = :user_id LIMIT 1');
+            $stmt->execute(['domain_name' => $domainName, 'user_id' => $userId]);
+            $record = $stmt->fetch();
+            $recordId = $record ? (int) $record['id'] : null;
+
+            // Логируем создание DNS-записи
+            $logger = new LoggerService(db());
+            $logger->log(
+                'create',
+                'dns_record',
+                $recordId,
+                sprintf('Создана DNS-запись: %s → %s (VM: %s, VMID: %d)', $domainName, $ipAddress, $machineName, $vmid)
+            );
+
             flash('success', 'DNS-запись сохранена: ' . $domainName . ' → ' . $ipAddress);
         } elseif ($action === 'save_manual_dns') {
             // Добавляет произвольную DNS-запись, не связанную с Proxmox.
@@ -136,6 +151,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ipAddress,
                 dns_manual_comment($comment),
                 $userId
+            );
+
+            // Получаем ID записи для логирования
+            $stmt = db()->prepare('SELECT id FROM dns_records WHERE domain_name = :domain_name AND created_by = :user_id LIMIT 1');
+            $stmt->execute(['domain_name' => $domainName, 'user_id' => $userId]);
+            $record = $stmt->fetch();
+            $recordId = $record ? (int) $record['id'] : null;
+
+            // Логируем создание DNS-записи
+            $logger = new LoggerService(db());
+            $logger->log(
+                'create',
+                'dns_record',
+                $recordId,
+                sprintf('Создана DNS-запись: %s → %s (вручную)', $domainName, $ipAddress)
             );
 
             flash('success', 'DNS-запись сохранена: ' . $domainName . ' → ' . $ipAddress);

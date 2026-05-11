@@ -5,14 +5,10 @@ declare(strict_types=1);
 require dirname(__DIR__, 2) . '/includes/bootstrap.php';
 
 try {
-    if (current_user()) {
-        redirect('mainmenu/dashboard.php');
-    }
-
     $state = bin2hex(random_bytes(32));
 
     $_SESSION['yandex_oauth_state'] = $state;
-    $_SESSION['yandex_oauth_mode'] = 'login';
+    $_SESSION['yandex_oauth_mode'] = current_user() ? 'link' : 'login';
 
     $service = new YandexAuthService($config);
     $url = $service->buildAuthorizeUrl($state);

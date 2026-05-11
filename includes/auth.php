@@ -18,7 +18,7 @@ function current_user(): ?array
     }
 
     $stmt = db()->prepare('
-        SELECT id, first_name, last_name, username, email, role, is_active, created_at
+        SELECT id, first_name, last_name, username, email, yandex_id, role, is_active, created_at
         FROM users
         WHERE id = :id
         LIMIT 1

@@ -18,6 +18,18 @@ if ($stmt->fetch()) {
         'user_id' => $user['id'],
         'status' => 'pending',
     ]);
+
+    $requestId = (int) db()->lastInsertId();
+
+    // Логируем создание заявки на VPN
+    $logger = new LoggerService(db());
+    $logger->log(
+        'create_request',
+        'vpn_request',
+        $requestId,
+        'Создана заявка на получение VPN доступа'
+    );
+
     flash('success', 'Заявка на VPN отправлена.');
 }
 
