@@ -38,12 +38,36 @@ final class MikrotikService
         return $this->client;
     }
 
+    // Выполняет запрос к роутеру и проверяет ответ на наличие ошибок
+    private function executeQuery(Query $query): array
+    {
+        $result = $this->client()->query($query)->read();
+        $resultArray = is_array($result) ? $result : [];
+
+        // Проверяем наличие ошибки (!trap) в ответе
+        foreach ($resultArray as $item) {
+            if (is_array($item)) {
+                if (array_key_exists('!trap', $item) || isset($item['message'])) {
+                    $msg = $item['message'] ?? $item['!trap']['message'] ?? $item['!trap'][0]['message'] ?? 'Недостаточно прав или неизвестная ошибка';
+                    throw new RuntimeException('Ошибка API: ' . (string) $msg);
+                }
+            }
+        }
+
+        // Обработка случая, если ошибка вернулась плоским массивом
+        if (array_key_exists('!trap', $resultArray) || isset($resultArray['message'])) {
+            $msg = $resultArray['message'] ?? $resultArray['!trap']['message'] ?? $resultArray['!trap'][0]['message'] ?? 'Недостаточно прав или неизвестная ошибка';
+            throw new RuntimeException('Ошибка API: ' . (string) $msg);
+        }
+
+        return $resultArray;
+    }
+
     // Получает список всех WireGuard-пиров на роутере
     public function getPeers(): array
     {
         $query = new Query('/interface/wireguard/peers/print');
-        $result = $this->client()->query($query)->read();
-        return is_array($result) ? $result : [];
+        return $this->executeQuery($query);
     }
 
     // Ищет WireGuard-пир по его публичному ключу
@@ -52,7 +76,7 @@ final class MikrotikService
         $query = (new Query('/interface/wireguard/peers/print'))
             ->where('public-key', $publicKey);
 
-        $result = $this->client()->query($query)->read();
+        $result = $this->executeQuery($query);
         return $result[0] ?? null;
     }
 
@@ -68,7 +92,7 @@ final class MikrotikService
             $query->equal('comment', $comment);
         }
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
     }
 
     // Обновляет существующего пира по старому ключу и возвращает факт обновления
@@ -92,7 +116,7 @@ final class MikrotikService
             $query->equal('comment', $comment);
         }
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
         return true;
     }
 
@@ -103,7 +127,7 @@ final class MikrotikService
             ->equal('.id', $id)
             ->equal('disabled', $disable ? 'yes' : 'no');
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
     }
 
     // ПЕРЕКЛЮЧЕНИЕ ПИРА
@@ -118,7 +142,7 @@ final class MikrotikService
         $query = (new Query('/interface/wireguard/peers/remove'))
             ->equal('.id', $id);
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
     }
 
     //////////дальше для DNS
@@ -127,9 +151,7 @@ final class MikrotikService
     public function getDnsStaticRecords(): array
     {
         $query = new Query('/ip/dns/static/print');
-        $result = $this->client()->query($query)->read();
-
-        return is_array($result) ? $result : [];
+        return $this->executeQuery($query);
     }
 
     // Ищет статическую DNS-запись на MikroTik по днс имени
@@ -138,8 +160,7 @@ final class MikrotikService
         $query = (new Query('/ip/dns/static/print'))
             ->where('name', $name);
 
-        $result = $this->client()->query($query)->read();
-
+        $result = $this->executeQuery($query);
         return $result[0] ?? null;
     }
 
@@ -154,8 +175,7 @@ final class MikrotikService
             $query->equal('comment', $comment);
         }
 
-        $this->client()->query($query)->read();
-
+        $this->executeQuery($query);
         return $this->findDnsStaticRecordByName($name);
     }
 
@@ -171,7 +191,7 @@ final class MikrotikService
             $query->equal('comment', $comment);
         }
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
     }
 
         // Удаляет статическую DNS-запись на MikroTik по ID.
@@ -180,6 +200,6 @@ final class MikrotikService
         $query = (new Query('/ip/dns/static/remove'))
             ->equal('.id', $id);
 
-        $this->client()->query($query)->read();
+        $this->executeQuery($query);
     }
 }
