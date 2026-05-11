@@ -8,6 +8,11 @@ require_auth();
 $user = current_user();
 $pageTitle = 'Главная';
 $pageSubtitle = 'Главная внутренняя страница';
+
+$settings = new SettingsService();
+$isVpnEnabled = $settings->getBool('module_vpn_enabled', true);
+$isSshEnabled = $settings->getBool('module_ssh_enabled', true);
+$isDnsEnabled = $settings->getBool('module_dns_enabled', true);
 // получаем данные о заявке на VPN?????????
 $stmt = db()->prepare('SELECT status, created_at, reviewed_at FROM vpn_requests WHERE user_id = :user_id LIMIT 1');
 $stmt->execute(['user_id' => $user['id']]);
@@ -44,7 +49,30 @@ require INCLUDES_PATH . '/header.php';
         <a class="btn" href="<?= e(url('vpn/index.php')) ?>">Открыть VPN</a>
     </section>!-->
 </div>
+
 <section class="card">
-    <h2>Пусто</h2>
+    <h2>Возможности личного кабинета</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+        <?php if ($isVpnEnabled): ?>
+        <div style="padding: 15px; background: rgba(128, 128, 128, 0.05); border-radius: 6px;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">Подключение VPN</h3>
+            <p class="muted" style="margin-bottom: 0; font-size: 0.95em;">Запрашивайте доступ к сети через WireGuard. Получайте готовый конфиг для подключения.</p>
+        </div>
+        <?php endif; ?>
+        <?php if ($isSshEnabled): ?>
+        <div style="padding: 15px; background: rgba(128, 128, 128, 0.05); border-radius: 6px;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">Доступ по SSH</h3>
+            <p class="muted" style="margin-bottom: 0; font-size: 0.95em;">Управляйте своими публичными ключами. Добавляйте ключи для быстрого подключения без ввода пароля.</p>
+        </div>
+        <?php endif; ?>
+        <?php if ($isDnsEnabled): ?>
+        <div style="padding: 15px; background: rgba(128, 128, 128, 0.05); border-radius: 6px;">
+            <h3 style="margin-top: 0; font-size: 1.1em;">Управление DNS</h3>
+            <p class="muted" style="margin-bottom: 0; font-size: 0.95em;">Привязывайте доменные имена к виртуальным машинам в Proxmox или создавайте произвольные записи.</p>
+        </div>
+        <?php endif; ?>
+        
+        
+    </div>
 </section>
 <?php require INCLUDES_PATH . '/footer.php'; ?>

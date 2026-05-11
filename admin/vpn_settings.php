@@ -13,40 +13,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $allowRegen = isset($_POST['allow_regen']) ? '1' : '0';
     $lastIpCount = trim($_POST['last_ip_count'] ?? '2');
 
+    $moduleVpnEnabled = isset($_POST['module_vpn_enabled']) ? '1' : '0';
+    $moduleSshEnabled = isset($_POST['module_ssh_enabled']) ? '1' : '0';
+    $moduleDnsEnabled = isset($_POST['module_dns_enabled']) ? '1' : '0';
+
     if (!ctype_digit($lastIpCount)) {
         flash('error', 'Счетчик IP должен быть целым числом.');
         redirect('admin/vpn_settings.php');
     }
-// обновляем настройки в базе данных
-    $update = db()->prepare('UPDATE settings SET setting_value = :value WHERE setting_key = :key');
-    $update->execute(['value' => $allowRegen, 'key' => 'allow_regen']);
-    $update->execute(['value' => $lastIpCount, 'key' => 'last_ip_count']);
+
+    $settingsService = new SettingsService();
+    $settingsService->set('allow_regen', $allowRegen);
+    $settingsService->set('last_ip_count', $lastIpCount);
+    $settingsService->set('module_vpn_enabled', $moduleVpnEnabled);
+    $settingsService->set('module_ssh_enabled', $moduleSshEnabled);
+    $settingsService->set('module_dns_enabled', $moduleDnsEnabled);
+
 // записываем в лог изменения настроек через LoggerService
     $logger = new LoggerService(db());
     $logger->log(
-        'vpn_settings_update',
+        'settings_update',
         'settings',
         null,
-        'allow_regen=' . $allowRegen . '; last_ip_count=' . $lastIpCount
+        'Обновлены системные настройки'
     );
 
-    flash('success', 'VPN настройки обновлены.');
+    flash('success', 'Настройки обновлены.');
     redirect('admin/vpn_settings.php');
 }
 
-$pageTitle = 'VPN настройки';
-$pageSubtitle = 'Глобальные параметры VPN-модуля.';
-// получаем список настроек
-$stmt = db()->query('SELECT setting_key, setting_value FROM settings');
-$rawSettings = $stmt->fetchAll();
-$settings = [];
-foreach ($rawSettings as $row) {
-    $settings[$row['setting_key']] = $row['setting_value'];
-}
-// получаем значение checkbox для разрешения повторной генерации конфигов
-$allowRegenChecked = ($settings['allow_regen'] ?? '0') === '1';
-// получаем значение счетчика IP
-$lastIpCountValue = $settings['last_ip_count'] ?? '2';
+$pageTitle = 'Настройки сайта';
+$pageSubtitle = 'Глобальные параметры сайта и модулей.';
+
+$settingsService = new SettingsService();
+$allowRegenChecked = $settingsService->getBool('allow_regen', false);
+$lastIpCountValue = $settingsService->get('last_ip_count', '2');
+$moduleVpnChecked = $settingsService->getBool('module_vpn_enabled', true);
+$moduleSshChecked = $settingsService->getBool('module_ssh_enabled', true);
+$moduleDnsChecked = $settingsService->getBool('module_dns_enabled', true);
 
 require INCLUDES_PATH . '/header.php';
 ?>
@@ -54,6 +58,23 @@ require INCLUDES_PATH . '/header.php';
     <form method="post" class="settings-form" data-dirty-form>
         <?= csrf_field() ?>
 
+        <h3>Видимость разделов</h3>
+        <label class="checkbox-row" for="module_vpn_enabled">
+            <input id="module_vpn_enabled" type="checkbox" name="module_vpn_enabled" value="1" <?= $moduleVpnChecked ? 'checked' : '' ?> data-initial="<?= $moduleVpnChecked ? '1' : '0' ?>">
+            <span>Модуль VPN включен</span>
+        </label>
+        
+        <label class="checkbox-row" for="module_ssh_enabled">
+            <input id="module_ssh_enabled" type="checkbox" name="module_ssh_enabled" value="1" <?= $moduleSshChecked ? 'checked' : '' ?> data-initial="<?= $moduleSshChecked ? '1' : '0' ?>">
+            <span>Модуль SSH включен</span>
+        </label>
+        
+        <label class="checkbox-row" for="module_dns_enabled">
+            <input id="module_dns_enabled" type="checkbox" name="module_dns_enabled" value="1" <?= $moduleDnsChecked ? 'checked' : '' ?> data-initial="<?= $moduleDnsChecked ? '1' : '0' ?>">
+            <span>Модуль DNS включен</span>
+        </label>
+
+        <h3 style="margin-top: 20px;">Настройки VPN</h3>
         <label class="checkbox-row" for="allow_regen">
             <input
                 id="allow_regen"
@@ -74,7 +95,7 @@ require INCLUDES_PATH . '/header.php';
             data-initial="<?= e($lastIpCountValue) ?>"
         >
 
-        <button class="btn btn-disabled" type="submit" id="save-settings-btn" disabled>
+        <button class="btn btn-disabled" type="submit" id="save-settings-btn" disabled style="margin-top: 20px;">
             Сохранить изменения
         </button>
     </form>
@@ -87,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     const submitBtn = document.getElementById('save-settings-btn');
-    const trackedFields = form.querySelectorAll('input[name="allow_regen"], input[name="last_ip_count"]');
+    const trackedFields = form.querySelectorAll('input[name="allow_regen"], input[name="last_ip_count"], input[name="module_vpn_enabled"], input[name="module_ssh_enabled"], input[name="module_dns_enabled"]');
 
     const isChanged = (field) => {
         const initial = field.dataset.initial ?? '';

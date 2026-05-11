@@ -20,6 +20,11 @@ if (!is_guest()):
 
         return false;
     };
+
+    $settings = new SettingsService();
+    $isVpnEnabled = $settings->getBool('module_vpn_enabled', true);
+    $isSshEnabled = $settings->getBool('module_ssh_enabled', true);
+    $isDnsEnabled = $settings->getBool('module_dns_enabled', true);
 ?>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -44,6 +49,7 @@ if (!is_guest()):
                 Главная
             </a>
 
+            <?php if ($isVpnEnabled): ?>
             <details
                 class="sidebar-group"
                 <?= $isGroupOpen(['lk_vpn/index.php']) ? 'open' : '' ?>
@@ -59,7 +65,9 @@ if (!is_guest()):
                     </a>
                 </div>
             </details>
+            <?php endif; ?>
 
+            <?php if ($isSshEnabled): ?>
             <details
                 class="sidebar-group"
                 <?= $isGroupOpen(['lk_ssh/index.php', 'lk_ssh/machines.php']) ? 'open' : '' ?>
@@ -82,7 +90,9 @@ if (!is_guest()):
                     </a>
                 </div>
             </details>
+            <?php endif; ?>
 
+            <?php if ($isDnsEnabled): ?>
             <details
                 class="sidebar-group"
                 <?= $isGroupOpen(['lk_dns/index.php', 'lk_dns/records.php']) ? 'open' : '' ?>
@@ -105,6 +115,7 @@ if (!is_guest()):
                     </a>
                 </div>
             </details>
+            <?php endif; ?>
 
             <?php if (is_admin()): ?>
                 <hr class="sidebar-divider">
@@ -120,20 +131,23 @@ if (!is_guest()):
                     <summary class="sidebar-group-title">Администрирование</summary>
 
                     <div class="sidebar-subnav">
+                        <?php if ($isVpnEnabled): ?>
                         <a
                             href="<?= e(url('admin/vpn_requests.php')) ?>"
                             class="<?= e($isActive('admin/vpn_requests.php')) ?>"
                         >
                             Заявки VPN
                         </a>
+                        <?php endif; ?>
 
                         <a
                             href="<?= e(url('admin/vpn_settings.php')) ?>"
                             class="<?= e($isActive('admin/vpn_settings.php')) ?>"
                         >
-                            Настройки VPN
+                            Настройки
                         </a>
 
+                        <?php if ($isVpnEnabled): ?>
                         <a
                             href="<?= e(url('admin/vpn_peers.php')) ?>"
                             class="<?= e($isActive('admin/vpn_peers.php')) ?>"
@@ -146,6 +160,7 @@ if (!is_guest()):
                         >
                             DNS-записи
                         </a>
+                        <?php endif; ?>
 
                         <a
                             href="<?= e(url('admin/logs.php')) ?>"
