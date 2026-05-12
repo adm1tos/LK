@@ -352,9 +352,14 @@ final class DnsService
         if ($mikrotikId !== '') {
             try {
                 $this->mikrotik->updateDnsStaticRecord($mikrotikId, $newDomainName, $newIpAddress, $newComment);
-            } catch (Throwable) {
-                $newRouterRecord = $this->mikrotik->addDnsStaticRecord($newDomainName, $newIpAddress, $newComment);
-                $mikrotikId = (string) ($newRouterRecord['.id'] ?? '');
+            } catch (Throwable $e) {
+                // Если ошибка вызвана тем, что старый ID не найден, создаем новую запись
+                if (str_contains($e->getMessage(), 'no such item')) {
+                    $newRouterRecord = $this->mikrotik->addDnsStaticRecord($newDomainName, $newIpAddress, $newComment);
+                    $mikrotikId = (string) ($newRouterRecord['.id'] ?? '');
+                } else {
+                    throw $e; // Ошибку прав доступа (и любые другие) выбрасываем дальше
+                }
             }
         } else {
             $newRouterRecord = $this->mikrotik->addDnsStaticRecord($newDomainName, $newIpAddress, $newComment);
@@ -491,8 +496,11 @@ final class DnsService
             try {
                 $this->mikrotik->deleteDnsStaticRecordById($mikrotikId);
                 return;
-            } catch (Throwable) {
-                // Если ID на MikroTik уже не актуален, попробуем найти запись по имени.
+            } catch (Throwable $e) {
+                if (!str_contains($e->getMessage(), 'no such item')) {
+                    throw $e; // Прокидываем ошибку, если это не устаревший ID
+                }
+                // Если это 'no such item', идем дальше и попробуем найти запись по имени.
             }
         }
 
