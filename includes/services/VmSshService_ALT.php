@@ -39,29 +39,53 @@ final class VmSshService
         return BASE_PATH . '/' . ltrim($path, '/');
     }
 
+    private function isTestMode(): bool
+    {
+        return (bool) ($this->config['ssh_admin']['test_mode'] ?? true);
+    }
+
     public function isManagedVm(string $node, int $vmid, string $type): bool
     {
-        $vm = $this->config['test_ssh_vm'];
+        if ($this->isTestMode()) {
+            $vm = $this->config['test_ssh_vm'];
+            return (
+                $node === (string) $vm['node'] &&
+                $vmid === (int) $vm['vmid'] &&
+                $type === (string) $vm['type']
+            );
+        }
 
-        return (
-            $node === (string) $vm['node'] &&
-            $vmid === (int) $vm['vmid'] &&
-            $type === (string) $vm['type']
-        );
+        return $type === 'qemu';
     }
 
     private function getManagedVmEndpoint(string $node, int $vmid, string $type): array
     {
         if (!$this->isManagedVm($node, $vmid, $type)) {
-            throw new RuntimeException('Для этой VM SSH-управление пока не настроено в тестовом стенде.');
+            throw new RuntimeException('Для этой VM SSH-управление пока не настроено.');
         }
 
-        $vm = $this->config['test_ssh_vm'];
+        if ($this->isTestMode()) {
+            $vm = $this->config['test_ssh_vm'];
+            return [
+                'ssh_host' => (string) $vm['host'],
+                'ssh_port' => (int) $vm['port'],
+                'ssh_user' => (string) $vm['user'],
+            ];
+        }
+
+        $proxmox = new ProxmoxService($this->config);
+        $ipAddress = $proxmox->getQemuMachineIp($node, $vmid);
+
+        if (!$ipAddress) {
+            throw new RuntimeException(
+                'Не удалось получить IP-адрес VM через QEMU Guest Agent. Проверь, что VM включена, агент установлен и включён в Proxmox.'
+            );
+        }
 
         return [
-            'ssh_host' => (string) $vm['host'],
-            'ssh_port' => (int) $vm['port'],
-            'ssh_user' => (string) $vm['user'],
+            'ssh_host' => $ipAddress,
+            'ssh_port' => (int) ($this->config['ssh_admin']['port'] ?? 22),
+            'ssh_user' => (string) ($this->config['ssh_admin']['user'] ?? 'lkadmin'),
         ];
     }
 
