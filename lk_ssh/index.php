@@ -218,7 +218,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     button.textContent = originalText;
                 }, 1200);
             } catch (e) {
-                alert('Не удалось скопировать ключ.');
+                // Fallback для браузеров, где navigator.clipboard не работает (например, Firefox на http)
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = key;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-999999px';
+                    textarea.style.top = '-999999px';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+
+                    const originalText = button.textContent;
+                    button.textContent = 'Скопировано';
+                    setTimeout(function () {
+                        button.textContent = originalText;
+                    }, 1200);
+                } catch (fallbackError) {
+                    alert('Не удалось скопировать ключ.');
+                }
             }
         });
     });

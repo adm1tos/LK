@@ -134,11 +134,16 @@ return [
         'node' => env_value('TEST_VM_NODE', 'prox'),
         'type' => env_value('TEST_VM_TYPE', 'qemu'),
     ],
-
     'ssh_admin' => [
         'private_key_path' => env_value('SSH_ADMIN_PRIVATE_KEY_PATH', 'storage/keys/lkadmin_site_id_ed25519'),
         'script_path' => env_value('SSH_ADMIN_SCRIPT_PATH', 'storage/scripts/lk-ssh-admin.sh'),
+        'test_mode' => env_value('SSH_TEST_MODE', '0'),
+        'user' => env_value('SSH_ADMIN_USER', 'lkadmin'),
+        'port' => (int) env_value('SSH_ADMIN_PORT', '22'),
+        'connect_timeout' => (int) env_value('SSH_CONNECT_TIMEOUT', '10'),
+        'command_timeout' => (int) env_value('SSH_COMMAND_TIMEOUT', '15'),
     ],
+ 
 
     'dns' => [
         'default_zone' => env_value('DNS_DEFAULT_ZONE', 'vnii.local'),
