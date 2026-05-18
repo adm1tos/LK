@@ -16,12 +16,19 @@ DirectoryIndex index.php
     Require all denied
 </FilesMatch>
 
+# Запрет доступа к файлам Docker
+<FilesMatch "^(docker-compose\.yml|Dockerfile)$">
+    Require all denied
+</FilesMatch>
+
 # Запрет доступа к PHP-зависимостям Composer
 RedirectMatch 403 ^/vendor(/|$)
 
 # Запрет доступа к внутренним папкам проекта
 RedirectMatch 403 ^/storage(/|$)
 RedirectMatch 403 ^/includes(/|$)
+RedirectMatch 403 ^/db(/|$)
+RedirectMatch 403 ^/docker(/|$)
 
 # Запрет доступа к временным/служебным файлам
 <FilesMatch "\.(bak|backup|old|log|sql|sqlite|ini|conf|key|pem|pub)$">
