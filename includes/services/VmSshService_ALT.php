@@ -8,6 +8,7 @@ final class VmSshService
     private string $privateKeyPath;
     private string $sshBinary;
     private string $nullKnownHosts;
+    private string $adminScriptPath;
 
     private function escapeRemoteArg(string $value): string
     {
@@ -19,6 +20,10 @@ final class VmSshService
         $path = (string) ($this->config['ssh_admin']['private_key_path'] ?? '');
 
         $this->privateKeyPath = $this->normalizePath($path);
+
+        $scriptPath = (string) ($this->config['ssh_admin']['script_path'] ?? 'storage/scripts/lk-ssh-admin.sh');
+        $this->adminScriptPath = $this->normalizePath($scriptPath);
+
         $this->sshBinary = 'ssh';
         $this->nullKnownHosts = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
     }
@@ -153,14 +158,53 @@ final class VmSshService
         ];
     }
 
+    /**
+     * @return array{stdout:string,stderr:string,exit_code:int}
+     */
+    private function runAdminScript(array $endpoint, string $action, array $arguments = []): array
+    {
+        if (!is_file($this->adminScriptPath)) {
+            throw new RuntimeException('SSH admin script не найден: ' . $this->adminScriptPath);
+        }
+
+        $script = file_get_contents($this->adminScriptPath);
+
+        if ($script === false || trim($script) === '') {
+            throw new RuntimeException('Не удалось прочитать SSH admin script.');
+        }
+
+        $encodedScript = base64_encode($script);
+
+        $commandParts = [
+            'printf',
+            '%s',
+            $this->escapeRemoteArg($encodedScript),
+            '|',
+            'base64',
+            '-d',
+            '|',
+            'sudo',
+            '-n',
+            '/bin/bash',
+            '-s',
+            '--',
+            $this->escapeRemoteArg($action),
+        ];
+
+        foreach ($arguments as $argument) {
+            $commandParts[] = $this->escapeRemoteArg((string) $argument);
+        }
+
+        $remoteCommand = implode(' ', $commandParts);
+
+        return $this->runRemoteCommand($endpoint, $remoteCommand);
+    }
+
     public function listUsers(string $node, int $vmid, string $type): array
     {
         $endpoint = $this->getManagedVmEndpoint($node, $vmid, $type);
 
-        $result = $this->runRemoteCommand(
-            $endpoint,
-            'sudo -n /usr/local/bin/lk-ssh-admin list-users'
-        );
+        $result = $this->runAdminScript($endpoint, 'list-users');
 
         if ($result['exit_code'] !== 0) {
             throw new RuntimeException(
@@ -184,13 +228,7 @@ final class VmSshService
 
         $publicKey = trim(str_replace(["\r", "\n"], '', $publicKey));
 
-        $remoteCommand = sprintf(
-            'sudo -n /usr/local/bin/lk-ssh-admin add-key %s %s',
-            $this->escapeRemoteArg($linuxUser),
-            $this->escapeRemoteArg($publicKey)
-        );
-
-        $result = $this->runRemoteCommand($endpoint, $remoteCommand);
+        $result = $this->runAdminScript($endpoint, 'add-key', [$linuxUser, $publicKey]);
 
         if ($result['exit_code'] !== 0) {
             throw new RuntimeException(
@@ -208,13 +246,7 @@ final class VmSshService
 
         $publicKey = trim(str_replace(["\r", "\n"], '', $publicKey));
 
-        $remoteCommand = sprintf(
-            'sudo -n /usr/local/bin/lk-ssh-admin remove-key %s %s',
-            $this->escapeRemoteArg($linuxUser),
-            $this->escapeRemoteArg($publicKey)
-        );
-
-        $result = $this->runRemoteCommand($endpoint, $remoteCommand);
+        $result = $this->runAdminScript($endpoint, 'remove-key', [$linuxUser, $publicKey]);
 
         if ($result['exit_code'] !== 0) {
             throw new RuntimeException(
