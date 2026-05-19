@@ -22,6 +22,13 @@ try {
 
 $vmSsh = new VmSshService($config);
 
+$stmt = db()->prepare('SELECT node, vmid, type, keys_count FROM user_vm_ssh_counters WHERE user_id = :user_id');
+$stmt->execute(['user_id' => current_user()['id']]);
+$counters = [];
+foreach ($stmt->fetchAll() as $row) {
+    $counters[$row['node'] . ':' . $row['vmid'] . ':' . $row['type']] = (int) $row['keys_count'];
+}
+
 require INCLUDES_PATH . '/header.php';
 ?>
 <section class="card">
@@ -46,7 +53,7 @@ require INCLUDES_PATH . '/header.php';
                     <th>Тип</th>
                     <th>Нода</th>
                     <th>CPU</th>
-                    <th>RAM</th>
+                    <th>Доступ</th>
                     <th>Uptime</th>
                     <th>SSH</th>
                 </tr>
@@ -58,6 +65,9 @@ require INCLUDES_PATH . '/header.php';
                     $vmid = (int) ($machine['vmid'] ?? 0);
                     $type = (string) ($machine['type'] ?? 'qemu');
                     $canManage = $vmSsh->isManagedVm($node, $vmid, $type);
+                    
+                    $machineKey = $node . ':' . $vmid . ':' . $type;
+                    $keysCount = $counters[$machineKey] ?? 0;
                     ?>
                     <tr>
                         <td><code><?= e((string) $machine['vmid']) ?></code></td>
@@ -69,7 +79,13 @@ require INCLUDES_PATH . '/header.php';
                         </td>
                         <td><?= e((string) $machine['node']) ?></td>
                         <td><?= e((string) $machine['cpus']) ?></td>
-                        <td><?= e(ProxmoxService::formatBytes($machine['maxmem'] ?? 0)) ?></td>
+                        <td>
+                            <?php if ($keysCount > 0): ?>
+                                <span class="badge badge-success">Ключей: <?= e((string) $keysCount) ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary">Нет доступа</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= e(ProxmoxService::formatUptime($machine['uptime'] ?? 0)) ?></td>
                         <td>
                             <?php if ($canManage): ?>

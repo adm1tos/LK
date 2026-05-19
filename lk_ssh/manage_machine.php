@@ -63,6 +63,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sprintf('Добавлен SSH-ключ "%s" пользователю %s на VM (node=%s, vmid=%d)', $key['key_name'], $linuxUser, $node, $vmid)
             );
 
+            // +1 к счётчику ключей на этой машине
+            $checkStmt = db()->prepare('SELECT keys_count FROM user_vm_ssh_counters WHERE user_id = :user_id AND node = :node AND vmid = :vmid AND type = :type');
+            $checkParams = [
+                'user_id' => current_user()['id'],
+                'node' => $node,
+                'vmid' => $vmid,
+                'type' => $type,
+            ];
+            $checkStmt->execute($checkParams);
+
+            if ($checkStmt->fetch()) {
+                $updateStmt = db()->prepare('UPDATE user_vm_ssh_counters SET keys_count = keys_count + 1 WHERE user_id = :user_id AND node = :node AND vmid = :vmid AND type = :type');
+                $updateStmt->execute($checkParams);
+            } else {
+                $insertParams = $checkParams;
+                $insertParams['keys_count'] = 1;
+                
+                $insertStmt = db()->prepare('INSERT INTO user_vm_ssh_counters (user_id, node, vmid, type, keys_count) VALUES (:user_id, :node, :vmid, :type, :keys_count)');
+                $insertStmt->execute($insertParams);
+            }
+
             flash('success', 'SSH-ключ добавлен пользователю ' . $linuxUser . '.');
         } elseif ($action === 'remove') {
             $vmSsh->removeKey($node, $vmid, $type, $linuxUser, (string) $key['public_key']);
@@ -75,6 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $vmid,
                 sprintf('Отозван SSH-ключ "%s" у пользователя %s на VM (node=%s, vmid=%d)', $key['key_name'], $linuxUser, $node, $vmid)
             );
+
+            // -1 от счётчика ключей на этой машине
+            $updateStmt = db()->prepare('UPDATE user_vm_ssh_counters SET keys_count = keys_count - 1 WHERE user_id = :user_id AND node = :node AND vmid = :vmid AND type = :type AND keys_count > 0');
+            $updateStmt->execute([
+                'user_id' => current_user()['id'],
+                'node' => $node,
+                'vmid' => $vmid,
+                'type' => $type,
+            ]);
 
             flash('success', 'SSH-ключ удалён у пользователя ' . $linuxUser . '.');
         } else {
