@@ -145,9 +145,7 @@ require INCLUDES_PATH . '/header.php';
                         <td><code><?= e((string) $log['action_type']) ?></code></td>
                         <td><?= e((string) ($log['target_type'] ?? '—')) ?></td>
                         <td><?= e((string) $targetId) ?></td>
-                        <td class="log-details" style="max-width: 300px; word-break: break-word; white-space: pre-wrap;">
-                            <?= e((string) ($log['details'] ?? '—')) ?>
-                        </td>
+                        <td class="log-details" style="max-width: 300px; word-break: break-word; white-space: pre-wrap;"><?= e((string) ($log['details'] ?? '—')) ?></td>
                         <td class="log-time"><?= e((string) $log['created_at']) ?></td>
                     </tr>
                 <?php endforeach; ?>
