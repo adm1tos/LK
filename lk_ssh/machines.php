@@ -29,6 +29,22 @@ foreach ($stmt->fetchAll() as $row) {
     $counters[$row['node'] . ':' . $row['vmid'] . ':' . $row['type']] = (int) $row['keys_count'];
 }
 
+if ($machines) {
+    usort($machines, static function (array $a, array $b) use ($counters): int {
+        $keyA = ($a['node'] ?? '') . ':' . ($a['vmid'] ?? 0) . ':' . ($a['type'] ?? 'qemu');
+        $keyB = ($b['node'] ?? '') . ':' . ($b['vmid'] ?? 0) . ':' . ($b['type'] ?? 'qemu');
+
+        $countA = $counters[$keyA] ?? 0;
+        $countB = $counters[$keyB] ?? 0;
+
+        if ($countA !== $countB) {
+            return $countB <=> $countA; // Сортировка по убыванию количества ключей
+        }
+
+        return ((int) ($a['vmid'] ?? 0)) <=> ((int) ($b['vmid'] ?? 0)); // При равенстве сортируем по возрастанию VMID
+    });
+}
+
 require INCLUDES_PATH . '/header.php';
 ?>
 <section class="card">

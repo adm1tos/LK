@@ -145,7 +145,30 @@ require INCLUDES_PATH . '/header.php';
                         <td><code><?= e((string) $log['action_type']) ?></code></td>
                         <td><?= e((string) ($log['target_type'] ?? '—')) ?></td>
                         <td><?= e((string) $targetId) ?></td>
-                        <td class="log-details"><?= e((string) ($log['details'] ?? '—')) ?></td>
+                        <td class="log-details" style="max-width: 300px; word-break: break-word;">
+                            <?php
+                            $details = (string) ($log['details'] ?? '—');
+                            if (mb_strlen($details) > 50): ?>
+                                <span class="detail-short"><?= e(mb_substr($details, 0, 50)) ?>...</span>
+                                <span class="detail-full" style="display: none;"><?= e($details) ?></span>
+                                <a href="#" onclick="
+                                    const full = this.previousElementSibling;
+                                    const short = full.previousElementSibling;
+                                    if (full.style.display === 'none') {
+                                        full.style.display = 'inline';
+                                        short.style.display = 'none';
+                                        this.textContent = 'Скрыть';
+                                    } else {
+                                        full.style.display = 'none';
+                                        short.style.display = 'inline';
+                                        this.textContent = 'Развернуть';
+                                    }
+                                    return false;
+                                " style="font-size: 0.85em; text-decoration: none; border-bottom: 1px dashed currentColor; opacity: 0.8; margin-left: 4px;">Развернуть</a>
+                            <?php else: ?>
+                                <?= e($details) ?>
+                            <?php endif; ?>
+                        </td>
                         <td class="log-time"><?= e((string) $log['created_at']) ?></td>
                     </tr>
                 <?php endforeach; ?>
