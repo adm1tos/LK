@@ -298,6 +298,8 @@ label {
 input,
 select,
 textarea {
+    box-sizing: border-box;
+    max-width: 100%;
     width: 100%;
     padding: 12px 14px;
     border-radius: 12px;
