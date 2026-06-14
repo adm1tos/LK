@@ -254,11 +254,15 @@ final class ProxmoxService
     // Выполняет bash-скрипт внутри VM через QEMU Guest Agent
     public function execGuestAgentScript(string $node, int $vmid, string $script): array
     {
+        // Оборачиваем скрипт в base64, чтобы избежать ошибки "Wide character in subroutine entry".
+        // Proxmox API падает, если в input-data попадает кириллица (например, из комментариев SSH-ключа).
+        $wrapper = 'echo ' . base64_encode($script) . ' | base64 -d | bash';
+
         $response = $this->client->create(
             '/nodes/' . rawurlencode($node) . '/qemu/' . $vmid . '/agent/exec',
             [
                 'command' => '/bin/bash',
-                'input-data' => $script,
+                'input-data' => $wrapper,
             ]
         );
 

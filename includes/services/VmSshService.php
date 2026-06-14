@@ -67,7 +67,7 @@ final class VmSshService
         $script = <<<BASH
 USER_HOME=$(getent passwd {$linuxUserEsc} | cut -d: -f6)
 if [ -z "\$USER_HOME" ]; then
-    echo "Пользователь не найден" >&2
+    echo "User not found" >&2
     exit 1
 fi
 
@@ -100,7 +100,7 @@ BASH;
         $script = <<<BASH
 USER_HOME=$(getent passwd {$linuxUserEsc} | cut -d: -f6)
 if [ -z "\$USER_HOME" ]; then
-    echo "Пользователь не найден" >&2
+    echo "User not found" >&2
     exit 1
 fi
 
