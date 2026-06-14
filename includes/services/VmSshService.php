@@ -25,6 +25,9 @@ final class VmSshService
             throw new RuntimeException('Управление сейчас поддерживается только для QEMU VM.');
         }
 
+        // Очищаем переносы строк Windows (CRLF -> LF), иначе bash падает с синтаксической ошибкой (неожиданный конец файла)
+        $script = str_replace("\r", "", $script);
+
         $result = $this->proxmox->execGuestAgentScript($node, $vmid, $script);
 
         if ($result['exitcode'] !== 0) {
