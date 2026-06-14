@@ -6,7 +6,7 @@ require dirname(__DIR__) . '/includes/bootstrap.php';
 require_auth();
 
 require_once INCLUDES_PATH . '/services/ProxmoxService.php';
-require_once INCLUDES_PATH . '/services/VmSshService_ALT.php';
+require_once INCLUDES_PATH . '/services/VmSshService.php';
 
 $pageTitle = 'SSH / Машины';
 $pageSubtitle = 'Список активных машин Proxmox для настройки SSH.';

@@ -19,21 +19,21 @@ class LoggerService
         ?string $details = null,
         ?int $userId = null
     ): void {
-        // Если пользователь не передан, пытаемся получить текущего
+        //пользователь не передан?  получаем текущего
         if ($userId === null) {
             $userId = $_SESSION['user_id'] ?? null;
         }
 
-        // Если всё ещё нет пользователя (гость), пропускаем логирование
+        //Если гость пропускаем логирование
         if ($userId === null) {
             return;
         }
-
+        //Всьавляем запись в базу данных
         $stmt = $this->db->prepare('
             INSERT INTO admin_logs (admin_id, action_type, target_type, target_id, details)
             VALUES (:user_id, :action_type, :target_type, :target_id, :details)
         ');
-
+        // Привязываем параметры и выполняем запрос
         $stmt->execute([
             'user_id' => $userId,
             'action_type' => $actionType,

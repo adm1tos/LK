@@ -34,15 +34,18 @@ final class VpnService
         }
 
         $oldPublicKey = $currentConfig['public_key'] ?? null;
+        // есть уже конфиг? какой следующий ip адрес заносим в новый конфиг?
         $ipAddress = $hasConfig && !empty($currentConfig['ip_address'])
             ? (string) $currentConfig['ip_address']
             : $this->allocateNextIp();
-
+        // вызов wireguardservice функции
         $keys = $this->wireGuard->generateKeyPair();
+        //конфиг
         $configBody = $this->wireGuard->createConfig($keys['private'], $ipAddress);
+        // комментарий для будущего пира в роутере
         $comment = $this->buildComment($user);
 
-        $routerAction = 'created';
+        $routerAction = 'created';//для ауита статус
         if ($oldPublicKey) {
             $updated = $this->mikrotik->updatePeerByPublicKey($oldPublicKey, $keys['public'], $ipAddress, $comment);
             if ($updated) {
@@ -96,7 +99,7 @@ final class VpnService
         return (string) $this->config['vpn']['user_ip_prefix'] . $counter;
     }
 
-    // Извлекает последний октет IPv4-адреса для обновления счетчика
+    // Извлекает последняя часть IPv4-адреса для обновления счетчика
     private function extractLastOctet(string $ipAddress): int
     {
         $parts = explode('.', $ipAddress);

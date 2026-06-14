@@ -15,14 +15,16 @@ final class YandexAuthService
 
     // Формирует ссылку, на которую пользователь будет отправлен для входа через Яндекс
     public function buildAuthorizeUrl(string $state): string
-    {
+    {   
+        //
+
         $clientId = trim((string) ($this->config['yandex']['client_id'] ?? ''));
         $redirectUri = trim((string) ($this->config['yandex']['redirect_uri'] ?? ''));
-
+        //если ссылка не указана
         if ($clientId === '' || $redirectUri === '') {
             throw new RuntimeException('Не настроены параметры Yandex OAuth.');
         }
-
+        // сбор ссылки с айди и ссылкой из .env
         return self::AUTHORIZE_URL . '?' . http_build_query([
             'response_type' => 'code',
             'client_id' => $clientId,
@@ -60,10 +62,11 @@ final class YandexAuthService
     {
         $ch = curl_init(self::USER_INFO_URL);
 
+        //успешно ли создался cURL дескриптор
         if (!$ch) {
             throw new RuntimeException('Не удалось инициализировать curl.');
         }
-
+        // параметры запроса время таймаут
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 15,
@@ -71,19 +74,20 @@ final class YandexAuthService
                 'Authorization: OAuth ' . $accessToken,
             ],
         ]);
-
+        //запрос к яндексу
         $raw = curl_exec($ch);
-
+        //ошибки?
         if ($raw === false) {
             $error = curl_error($ch);
             curl_close($ch);
 
             throw new RuntimeException('Ошибка запроса профиля Яндекса: ' . $error);
         }
-
+        // получили ответ
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        // закрыли сессию
         curl_close($ch);
-
+        // расшифровали ответ в массив
         $data = json_decode((string) $raw, true);
 
         if ($statusCode < 200 || $statusCode >= 300 || !is_array($data)) {

@@ -10,13 +10,13 @@ function current_user(): ?array
     if ($user !== false) {
         return $user;
     }
-
+    //извлечение идентификатора
     $id = $_SESSION['user_id'] ?? null;
     if (!$id) {
         $user = null;
         return $user;
     }
-
+    //запрос в БД на получение
     $stmt = db()->prepare('
         SELECT id, first_name, last_name, username, email, yandex_id, role, is_active, created_at
         FROM users
@@ -25,7 +25,7 @@ function current_user(): ?array
     ');
     $stmt->execute(['id' => $id]);
     $user = $stmt->fetch() ?: null;
-
+    // какой статус у пользователя
     if ($user && (int) $user['is_active'] !== 1) {
         unset($_SESSION['user_id']);
         $user = null;

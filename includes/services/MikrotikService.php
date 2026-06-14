@@ -20,12 +20,13 @@ final class MikrotikService
     // Возвращает подключенный API-клиент MikroTik с ленивой инициализацией
     private function client(): Client
     {
+        // Если клиент уже создан, возвращаем его
         if ($this->client instanceof Client) {
             return $this->client;
         }
 
         $mt = $this->config['mikrotik'];
-
+        // получаем данные для соединения с роутером и создаём клиент для работы с роутером
         $this->client = new Client([
             'host' => $mt['host'],
             'user' => $mt['user'],
@@ -149,8 +150,10 @@ final class MikrotikService
 
      // Получает список всех статических DNS-записей на MikroTik \уже не старое
     public function getDnsStaticRecords(): array
-    {
+    {   
+        // команда для роутера
         $query = new Query('/ip/dns/static/print');
+        // отправка команды выше
         return $this->executeQuery($query);
     }
 

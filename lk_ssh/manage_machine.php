@@ -5,7 +5,7 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/includes/bootstrap.php';
 require_auth();
 
-require_once INCLUDES_PATH . '/services/VmSshService_ALT.php';
+require_once INCLUDES_PATH . '/services/VmSshService.php';
 
 $node = trim((string) ($_GET['node'] ?? ''));
 $vmid = (int) ($_GET['vmid'] ?? 0);

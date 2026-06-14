@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        /*username оставлю на всякий случай*/
+        /*USERNAME ОСТАВИТЬ НА ВСЯКИХ СЛУЧАЙ*/
 
         $username = $email;
 

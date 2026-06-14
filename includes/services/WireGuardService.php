@@ -17,10 +17,10 @@ final class WireGuardService
         if (!extension_loaded('sodium')) {
             throw new RuntimeException('Для генерации WireGuard-ключей требуется расширение sodium.');
         }
-
+        // вызов генерации от sodium
         $privateRaw = random_bytes(SODIUM_CRYPTO_BOX_SECRETKEYBYTES);
         $publicRaw = sodium_crypto_scalarmult_base($privateRaw);
-
+        
         return [
             'private' => base64_encode($privateRaw),
             'public' => base64_encode($publicRaw),
@@ -30,7 +30,8 @@ final class WireGuardService
     // Собирает текст клиентского WireGuard-конфига из ключа и IP-адреса
     // Типа шаблон
     public function createConfig(string $privateKey, string $clientIp): string
-    {
+    {   
+        // получаем переменные указанные в свойствах проекта
         $vpn = $this->config['vpn'];
 
         $address = $clientIp . '/24';
@@ -38,7 +39,7 @@ final class WireGuardService
         if ($extraAddresses !== '') {
             $address .= ', ' . $extraAddresses;
         }
-
+        //
         return "[Interface]
 "
             . "PrivateKey = {$privateKey}

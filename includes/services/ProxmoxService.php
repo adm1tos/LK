@@ -30,13 +30,13 @@ final class ProxmoxService
         $result = [];
         $nodesResponse = $this->client->get('/nodes');
         $nodes = $nodesResponse['data'] ?? [];
-
+        // проходим по всем группам с ВМ внутри гипервизора
         foreach ($nodes as $nodeRow) {
             $node = (string) ($nodeRow['node'] ?? '');
             if ($node === '') {
                 continue;
             }
-
+            // получаем от гипервизора ответ с данными машин и кладём в массив
             $qemuResponse = $this->client->get('/nodes/' . $node . '/qemu');
             foreach (($qemuResponse['data'] ?? []) as $vm) {
                 $result[] = [
@@ -131,14 +131,16 @@ final class ProxmoxService
     private function getQemuIp(string $node, int $vmid): ?string
     {
         try {
+            // обращаемся к нужной ВМ запросом от лица гипервизора
             $response = $this->client->get('/nodes/' . $node . '/qemu/' . $vmid . '/agent/network-get-interfaces');
             $interfaces = $response['data']['result'] ?? [];
 
             foreach ($interfaces as $interface) {
                 foreach (($interface['ip-addresses'] ?? []) as $ip) {
+                    // забираем адрес машины
                     $address = (string) ($ip['ip-address'] ?? '');
                     $type = (string) ($ip['ip-address-type'] ?? '');
-
+                    // проверяем настоящий ли или NAT какой-нибудь
                     if ($type === 'ipv4' && $this->isUsableIp($address)) {
                         return $address;
                     }
@@ -247,5 +249,43 @@ final class ProxmoxService
         }
 
         return true;
+    }
+
+    // Выполняет bash-скрипт внутри VM через QEMU Guest Agent
+    public function execGuestAgentScript(string $node, int $vmid, string $script): array
+    {
+        $b64 = base64_encode($script);
+        // Оборачиваем передачу скрипта в base64, чтобы избежать любых проблем с экранированием кавычек и спецсимволов при передаче.
+        $command = ['/bin/sh', '-c', 'echo ' . $b64 . ' | base64 -d | /bin/bash'];
+
+        $response = $this->client->create(
+            '/nodes/' . rawurlencode($node) . '/qemu/' . $vmid . '/agent/exec',
+            ['command' => $command]
+        );
+
+        $pid = $response['data']['pid'] ?? null;
+        if (!$pid) {
+            throw new RuntimeException('Не удалось получить PID запущенной команды от qemu-guest-agent.');
+        }
+
+        // Ждем завершения (до 15 секунд)
+        for ($i = 0; $i < 15; $i++) {
+            sleep(1);
+            $statusResponse = $this->client->get(
+                '/nodes/' . rawurlencode($node) . '/qemu/' . $vmid . '/agent/exec-status',
+                ['pid' => $pid]
+            );
+
+            $status = $statusResponse['data'] ?? [];
+            if (($status['exited'] ?? 0) === 1) {
+                return [
+                    'exitcode' => (int) ($status['exitcode'] ?? -1),
+                    'out-data' => (string) ($status['out-data'] ?? ''),
+                    'err-data' => (string) ($status['err-data'] ?? ''),
+                ];
+            }
+        }
+
+        throw new RuntimeException('Превышено время ожидания выполнения команды qemu-guest-agent.');
     }
 }

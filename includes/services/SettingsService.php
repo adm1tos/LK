@@ -7,7 +7,7 @@ final class SettingsService
 {
     // Возвращает строковое значение настройки по ключу или значение по умолчанию
     public function get(string $key, ?string $default = null): ?string
-    {
+    {   
         $stmt = db()->prepare('SELECT setting_value FROM settings WHERE setting_key = :key LIMIT 1');
         $stmt->execute(['key' => $key]);
         $row = $stmt->fetch();
@@ -35,6 +35,7 @@ final class SettingsService
     // Сохраняет настройку обновляя значение при существующем ключе
     public function set(string $key, string $value): void
     {
+
         $stmt = db()->prepare(
             'INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value)
              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)'
