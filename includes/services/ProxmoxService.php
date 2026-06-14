@@ -254,13 +254,12 @@ final class ProxmoxService
     // Выполняет bash-скрипт внутри VM через QEMU Guest Agent
     public function execGuestAgentScript(string $node, int $vmid, string $script): array
     {
-        $b64 = base64_encode($script);
-        // Оборачиваем передачу скрипта в base64, чтобы избежать любых проблем с экранированием кавычек и спецсимволов при передаче.
-        $command = ['/bin/sh', '-c', 'echo ' . $b64 . ' | base64 -d | /bin/bash'];
-
         $response = $this->client->create(
             '/nodes/' . rawurlencode($node) . '/qemu/' . $vmid . '/agent/exec',
-            ['command' => $command]
+            [
+                'command' => '/bin/bash',
+                'input-data' => $script,
+            ]
         );
 
         $pid = $response['data']['pid'] ?? null;
